@@ -1,0 +1,74 @@
+.landing-container {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;     /* Center vertically */
+  gap: 40px;               /* Space between the two buttons */
+  
+  /* Full viewport height minus the NavBar height (70px) */
+  min-height: calc(100vh - 70px); 
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Shared style for the big square buttons */
+.big-action-btn {
+  width: 300px;    /* Fixed width for square shape */
+  height: 300px;   /* Fixed height for square shape */
+  
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.big-action-btn:hover {
+  transform: translateY(-8px); /* Lifts up on hover */
+  box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+}
+
+/* Color Variants */
+.big-action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb); /* Blue Gradient */
+}
+
+.big-action-btn.secondary {
+  background: linear-gradient(135deg, #10b981, #059669); /* Green Gradient */
+}
+
+/* Typography */
+.icon-wrapper {
+  font-size: 5rem; /* Huge Icon */
+  margin-bottom: 20px;
+  line-height: 1;
+}
+
+.big-action-btn h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .landing-container {
+    flex-direction: column; /* Stack buttons on mobile */
+    height: auto;
+    padding-top: 50px;
+    padding-bottom: 50px;
+  }
+  
+  .big-action-btn {
+    width: 100%;
+    max-width: 300px;
+    height: 250px;
+  }
+}
