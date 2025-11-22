@@ -12,6 +12,11 @@ const CreateImage = ({ onClose }) => {
 
   const [albumTitle, setAlbumTitle] = useState("");
   const [albumSlug, setAlbumSlug] = useState("");
+  const [addToAlbum, setAddToAlbum] = useState(false);
+  const [availableImageSlug, setAvailableImageSlug] = useState(null);
+  const [availableAlbumSlug, setAvailableAlbumSlug] = useState(null);
+  const [albumsList, setAlbumsList] = useState([]);
+  const [showAlbumChooser, setShowAlbumChooser] = useState(false);
 
   const [images, setImages] = useState([]);
   const [selectedIdx, setSelectedIdx] = useState(null);
@@ -89,6 +94,39 @@ const CreateImage = ({ onClose }) => {
     if (selectedIdx !== null) loadCurrentImage();
   }, [selectedIdx]);
 
+  // fetch existing albums for chooser
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      try {
+        const res = await axios.get(`${BACKEND_URL}/api/albums`);
+        setAlbumsList(res.data.albums || []);
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchAlbums();
+  }, []);
+
+  // debounce helpers
+  const debounce = (fn, wait = 400) => {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  };
+
+  // slug-checking removed: no backend validation for slugs
+  const checkImageSlug = debounce((slug) => {
+    // no-op: we no longer validate slugs server-side
+    setAvailableImageSlug(null);
+  }, 400);
+
+  const checkAlbumSlug = debounce((slug) => {
+    // no-op: we no longer validate album slugs server-side
+    setAvailableAlbumSlug(null);
+  }, 400);
+
   const undo = () => {
     if (selectedIdx === null) return;
     const img = images[selectedIdx];
@@ -118,6 +156,7 @@ const CreateImage = ({ onClose }) => {
       preview: URL.createObjectURL(file),
       name: file.name,
       slug: "",
+      slugEdited: false,
       canvasState: [],
       historyStep: -1,
       tool: "pen",
@@ -150,6 +189,7 @@ const CreateImage = ({ onClose }) => {
     setImages(prev => {
       const updated = [...prev];
       updated[selectedIdx][prop] = value;
+      if (prop === "slug") updated[selectedIdx].slugEdited = true;
       return updated;
     });
   };
@@ -199,7 +239,41 @@ const CreateImage = ({ onClose }) => {
     setIsUploading(true);
 
     try {
-      const albumId = albumSlug.trim() || `album-${Date.now()}`;
+      // Decide where to upload: if user chose to add into album, require album fields
+      let albumId;
+      let finalAlbumTitle;
+
+      if (addToAlbum) {
+        if (!albumTitle.trim() || !albumSlug.trim()) {
+          return alert("Please provide both Album title and Album URL when adding into album.");
+        }
+        albumId = albumSlug.trim();
+        finalAlbumTitle = albumTitle.trim();
+      } else {
+        // default global images album
+        albumId = "images";
+        finalAlbumTitle = "Images";
+      }
+
+      // Prepare slugs for all images in this batch
+      const initialSlugs = images.map((imgData, i) => {
+        const fileBase = (imgData.name || "").replace(/\.[^/.]+$/, "");
+        const sanitizedFileBase = fileBase.trim().replace(/[^a-zA-Z0-9-_]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+        return (imgData.slug.trim() || sanitizedFileBase || `img-${Date.now()}`).trim();
+      });
+
+      // Ensure unique within this batch by appending -1, -2 for duplicates
+      const counts = {};
+      const batchUnique = initialSlugs.map((s) => {
+        const base = s;
+        counts[base] = (counts[base] || 0) + 1;
+        if (counts[base] === 1) return base;
+        return `${base}-${counts[base] - 1}`;
+      });
+
+      // No server-side slug checking: use unique slugs within the batch
+      const finalSlugs = batchUnique;
+
       const uploadedImages = [];
 
       for (let i = 0; i < images.length; i++) {
@@ -215,17 +289,29 @@ const CreateImage = ({ onClose }) => {
         const canvas = canvasRef.current;
         const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 0.95));
 
-        const finalSlug = imgData.slug.trim() || `image-${i + 1}`;
+        const finalSlug = finalSlugs[i];
 
         const formData = new FormData();
         formData.append("image", blob, `${finalSlug}.png`);
         formData.append("slug", finalSlug);
         formData.append("albumId", albumId);
-        formData.append("albumTitle", albumTitle || "My Album");
+        formData.append("albumTitle", finalAlbumTitle);
+        // indicate whether this slug was explicitly edited by the user
+        formData.append("isCustomSlug", imgData.slugEdited ? "true" : "false");
 
-        const res = await axios.post(`${BACKEND_URL}/api/images`, formData, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
+        let res;
+        try {
+          res = await axios.post(`${BACKEND_URL}/api/images`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+          });
+        } catch (err) {
+          if (err.response?.status === 409) {
+            alert(`Upload failed: slug \"${finalSlug}\" is already taken. Please change the slug and try again.`);
+            setIsUploading(false);
+            return;
+          }
+          throw err;
+        }
 
         uploadedImages.push(res.data.imageUrl);
       }
@@ -248,21 +334,58 @@ const CreateImage = ({ onClose }) => {
       <div style={{ width: 380, background: "white", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", padding: 20 }}>
         <h2>Create Album</h2>
 
-        <input
-          type="text"
-          placeholder="Album title (optional)"
-          value={albumTitle}
-          onChange={e => setAlbumTitle(e.target.value)}
-          style={{ width: "100%", padding: 12, marginBottom: 12, borderRadius: 8, border: "1px solid #ddd" }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" checked={addToAlbum} onChange={e => setAddToAlbum(e.target.checked)} />
+            <span style={{ fontWeight: "bold" }}>Add into album</span>
+          </label>
+          <button type="button" onClick={() => setShowAlbumChooser(s => !s)} style={{ padding: "6px 10px" }}>{showAlbumChooser ? "Hide" : "Choose existing"}</button>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Album URL (optional)"
-          value={albumSlug}
-          onChange={e => setAlbumSlug(e.target.value)}
-          style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 8, border: "1px solid #ddd" }}
-        />
+        {addToAlbum ? (
+          <>
+            <input
+              type="text"
+              placeholder="Album title (required when adding into album)"
+              value={albumTitle}
+              onChange={e => setAlbumTitle(e.target.value)}
+              style={{ width: "100%", padding: 12, marginBottom: 12, borderRadius: 8, border: "1px solid #ddd" }}
+            />
+
+            <input
+              type="text"
+              placeholder="Album URL / slug (required when adding into album)"
+              value={albumSlug}
+              onChange={e => { setAlbumSlug(e.target.value); }}
+              style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 8, border: "1px solid #ddd" }}
+            />
+            {availableAlbumSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This album URL is already taken — you can select it from existing albums.</div>}
+
+            {showAlbumChooser && albumsList.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <label style={{ fontSize: 14, fontWeight: "bold" }}>Or select existing album</label>
+                <select style={{ width: "100%", padding: 10, marginTop: 6 }} onChange={e => {
+                  const v = e.target.value;
+                  if (!v) return;
+                  const sel = albumsList.find(a => a.slug === v);
+                  if (sel) {
+                    setAlbumSlug(sel.slug);
+                    setAlbumTitle(sel.name);
+                    setAddToAlbum(true);
+                    setAvailableAlbumSlug(true);
+                  }
+                }} value={albumSlug || ""}>
+                  <option value="">-- choose an album --</option>
+                  {albumsList.map(a => (
+                    <option key={a._id} value={a.slug}>{a.name} ({a.slug})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ marginBottom: 16, color: "#666", fontSize: 14 }}>Images will be uploaded into the global <strong>images</strong> album by default.</div>
+        )}
 
         <label style={{ display: "block", background: "#3498db", color: "white", padding: 14, borderRadius: 8, textAlign: "center", cursor: "pointer", fontWeight: "bold" }}>
           Upload Images
@@ -310,10 +433,11 @@ const CreateImage = ({ onClose }) => {
               type="text"
               placeholder="my-cool-drawing"
               value={currentImage.slug}
-              onChange={e => updateImageProp("slug", e.target.value)}
+              onChange={e => { updateImageProp("slug", e.target.value); }}
               style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
             />
             <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
+            {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
           </div>
         )}
 
