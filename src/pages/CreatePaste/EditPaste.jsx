@@ -19,7 +19,7 @@ export default function EditPaste() {
             setLoading(true);
             setError("");
 
-            let url = `http://localhost:3000/paste/${id}`;
+            let url = `${BACKEND_URL}/paste/${id}`;
             if (pwd) url += `?password=${encodeURIComponent(pwd)}`;
 
             const res = await fetch(url, {
@@ -53,7 +53,7 @@ export default function EditPaste() {
     // -----------------------
     const updatePaste = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/paste/${id}`, {
+            const res = await fetch(`${BACKEND_URL}/paste/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

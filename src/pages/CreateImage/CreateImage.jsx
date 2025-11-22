@@ -1,27 +1,27 @@
+// components/CreateImage.jsx
+
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import axios from "axios";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 const CreateImage = ({ onClose }) => {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const isDrawing = useRef(false);
 
-  // Album info
   const [albumTitle, setAlbumTitle] = useState("");
-  const [albumSlug, setAlbumSlug] = useState(""); // slug chung cho cả album (tùy chọn)
+  const [albumSlug, setAlbumSlug] = useState("");
 
-  // Images array - mỗi ảnh có dữ liệu riêng
   const [images, setImages] = useState([]);
   const [selectedIdx, setSelectedIdx] = useState(null);
 
-  // Upload status
   const [isUploading, setIsUploading] = useState(false);
   const [shareLink, setShareLink] = useState("");
 
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
 
-  // ================= CANVAS INIT =================
   useEffect(() => {
     if (!canvasRef.current || selectedIdx === null) return;
     const canvas = canvasRef.current;
@@ -31,7 +31,6 @@ const CreateImage = ({ onClose }) => {
     ctx.lineJoin = "round";
   }, [selectedIdx]);
 
-  // Update stroke style khi thay đổi công cụ
   useEffect(() => {
     if (ctxRef.current && selectedIdx !== null) {
       const img = images[selectedIdx];
@@ -40,7 +39,6 @@ const CreateImage = ({ onClose }) => {
     }
   }, [images, selectedIdx]);
 
-  // ================= SAVE & RESTORE STATE PER IMAGE =================
   const saveState = useCallback(() => {
     if (selectedIdx === null || !canvasRef.current) return;
     const dataURL = canvasRef.current.toDataURL();
@@ -91,7 +89,6 @@ const CreateImage = ({ onClose }) => {
     if (selectedIdx !== null) loadCurrentImage();
   }, [selectedIdx]);
 
-  // ================= UNDO / REDO =================
   const undo = () => {
     if (selectedIdx === null) return;
     const img = images[selectedIdx];
@@ -114,14 +111,13 @@ const CreateImage = ({ onClose }) => {
     });
   };
 
-  // ================= UPLOAD MULTIPLE IMAGES =================
   const handleUpload = (e) => {
     const files = Array.from(e.target.files);
     const newImages = files.map((file, i) => ({
       file,
       preview: URL.createObjectURL(file),
       name: file.name,
-      slug: "", // slug riêng từng ảnh
+      slug: "",
       canvasState: [],
       historyStep: -1,
       tool: "pen",
@@ -158,7 +154,6 @@ const CreateImage = ({ onClose }) => {
     });
   };
 
-  // ================= DRAWING HANDLERS =================
   const start = (e) => {
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -197,10 +192,9 @@ const CreateImage = ({ onClose }) => {
     saveState();
   };
 
-  // ================= UPLOAD TO S3 + CREATE ALBUM =================
   const handleCreateAlbum = async () => {
     if (images.length === 0) return alert("Please upload at least one image!");
-    if (selectedIdx !== null) saveState(); // lưu ảnh đang chỉnh sửa
+    if (selectedIdx !== null) saveState();
 
     setIsUploading(true);
 
@@ -208,16 +202,13 @@ const CreateImage = ({ onClose }) => {
       const albumId = albumSlug.trim() || `album-${Date.now()}`;
       const uploadedImages = [];
 
-      // Duyệt từng ảnh và upload lần lượt
       for (let i = 0; i < images.length; i++) {
         const imgData = images[i];
 
-        // Lưu trạng thái canvas mới nhất cho ảnh này
         if (selectedIdx === i) saveState();
         else {
-          // Tạm chọn ảnh i để lấy canvas đúng
           setSelectedIdx(i);
-          await new Promise(resolve => setTimeout(resolve, 50)); // chờ canvas render
+          await new Promise(resolve => setTimeout(resolve, 50));
           saveState();
         }
 
@@ -232,7 +223,7 @@ const CreateImage = ({ onClose }) => {
         formData.append("albumId", albumId);
         formData.append("albumTitle", albumTitle || "My Album");
 
-        const res = await axios.post("http://localhost:3000/api/images", formData, {
+        const res = await axios.post(`${BACKEND_URL}/api/images`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
 
@@ -254,7 +245,6 @@ const CreateImage = ({ onClose }) => {
 
   return (
     <div style={{ display: "flex", gap: 24, padding: 20, background: "#f5f7fa", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
-      {/* LEFT PANEL */}
       <div style={{ width: 380, background: "white", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", padding: 20 }}>
         <h2>Create Album</h2>
 
@@ -310,7 +300,6 @@ const CreateImage = ({ onClose }) => {
         )}
       </div>
 
-      {/* RIGHT PANEL - EDITOR */}
       <div style={{ flex: 1, background: "white", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", padding: 20 }}>
         <h2>Edit Image</h2>
 

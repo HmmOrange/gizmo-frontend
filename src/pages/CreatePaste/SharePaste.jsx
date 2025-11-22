@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 export default function SharePaste() {
-    const API_BASE = "http://localhost:3000/paste";
+    const API_BASE = `${BACKEND_URL}/paste`;
     const { id } = useParams();
 
     const [paste, setPaste] = useState(null);

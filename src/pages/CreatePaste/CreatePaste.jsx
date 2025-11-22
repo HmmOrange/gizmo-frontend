@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar/NavBar";
 
 export default function CreatePaste() {
-  const API_BASE = "http://localhost:3000/paste";
+  const API_BASE = `${BACKEND_URL}/paste`;
 
   const [form, setForm] = useState({
     title: "",
@@ -63,7 +63,7 @@ export default function CreatePaste() {
 
     const json = await res.json();
     if (res.ok) {
-      setCreateResult(`http://localhost:5173/share/${json.slug}`);
+      setCreateResult(`${FRONTEND_URL}/share/${json.slug}`);
     } else {
       setCreateResult({ error: json.message || json.error });
     }
