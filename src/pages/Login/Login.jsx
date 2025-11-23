@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles.css";
 import toast from "react-hot-toast";
+import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import { LoginForm } from "@/components/login-form";
 
@@ -17,28 +18,27 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-    const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      toast.error(data.message || "Login failed");
-      return;
+      localStorage.setItem("token", res.data.token);
+      login(res.data.token);
+      toast.success("Logged in successfully!");
+      setTimeout(() => navigate("/"), 1000);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Login failed");
     }
-    localStorage.setItem("token", data.token);
-    login(data.token);
-    toast.success("Logged in successfully!");
-    setTimeout(() => navigate("/"), 1000);
+
+    setLoading(false);
   }
 
   function handleMicrosoftLogin() {
     setLoading(true);
-    window.location.href = "/api/auth/oauth/microsoft";
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/oauth/microsoft`;
   }
 
   return (

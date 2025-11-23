@@ -1,5 +1,3 @@
-// components/CreateImage.jsx
-
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
