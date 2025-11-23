@@ -8,6 +8,7 @@ import SharePaste from "../pages/CreatePaste/SharePaste.jsx";
 import EditPaste from "../pages/CreatePaste/EditPaste.jsx";
 import CreateImage from "../pages/CreateImage/CreateImage.jsx";
 import ShareImage from "../pages/CreateImage/ShareImage.jsx";
+import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx";
 import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx";
 
 export default function AppRoutes() {
@@ -22,6 +23,7 @@ export default function AppRoutes() {
         <Route path="/edit/:id" element={<EditPaste />} />
         <Route path="/create/image" element={<CreateImage />} />
         <Route path="/share/image/:slug" element={<ShareImage />} />
+        <Route path="/share/album/:slug" element={<ShareAlbum />} />
         <Route path="/auth/success" element={<AuthCallback />} />
       </Routes>
     </BrowserRouter>
