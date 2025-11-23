@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { SignupForm } from "@/components/signup-form";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 export default function SignUp() {
   const navigate = useNavigate();
+  const API_BASE = `${BACKEND_URL}/api/auth/signup`;
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,13 +23,21 @@ export default function SignUp() {
       return;
     }
 
-    const res = await fetch("/api/auth/signup", {
+    const body = { username, password, fullname: fullName };
+
+    const res = await fetch(API_BASE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, name: fullName }),
+      body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      toast.error("Server error");
+      return;
+    }
 
     if (!res.ok) {
       toast.error(data.message || "Sign up failed");
@@ -39,7 +50,7 @@ export default function SignUp() {
 
   function handleMicrosoftLogin() {
     setLoading(true);
-    window.location.href = "/api/auth/oauth/microsoft";
+    window.location.href = `${BACKEND_URL}/api/auth/oauth/microsoft`;
   }
 
   return (
@@ -47,7 +58,7 @@ export default function SignUp() {
       <div className="w-full max-w-sm">
         <SignupForm
           username={username}
-          fullName={fullName}
+          fullname={fullName}
           password={password}
           confirmPassword={confirmPassword}
           onUsernameChange={(e) => setUsername(e.target.value)}
