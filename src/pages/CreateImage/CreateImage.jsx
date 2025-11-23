@@ -10,6 +10,7 @@ const CreateImage = ({ onClose }) => {
 
   const [albumTitle, setAlbumTitle] = useState("");
   const [albumSlug, setAlbumSlug] = useState("");
+  const [albumExposure, setAlbumExposure] = useState("private");
   const [addToAlbum, setAddToAlbum] = useState(false);
   const [availableImageSlug, setAvailableImageSlug] = useState(null);
   const [availableAlbumSlug, setAvailableAlbumSlug] = useState(null);
@@ -21,6 +22,7 @@ const CreateImage = ({ onClose }) => {
 
   const [isUploading, setIsUploading] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [shareLinks, setShareLinks] = useState([]);
 
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
@@ -57,39 +59,6 @@ const CreateImage = ({ onClose }) => {
       img.historyStep = newHistory.length - 1;
       return updated;
     });
-  }, [selectedIdx]);
-
-  const loadCurrentImage = () => {
-    if (selectedIdx === null) return;
-    const imgData = images[selectedIdx];
-    const img = new Image();
-    img.onload = () => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      const ratio = Math.min(MAX_WIDTH / img.width, MAX_HEIGHT / img.height, 1);
-      const w = img.width * ratio;
-      const h = img.height * ratio;
-
-      canvas.width = w;
-      canvas.height = h;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
-
-      if (imgData.canvasState.length > 0) {
-        const lastState = imgData.canvasState[imgData.historyStep];
-        if (lastState) {
-          const overlay = new Image();
-          overlay.onload = () => ctx.drawImage(overlay, 0, 0, w, h);
-          overlay.src = lastState;
-        }
-      }
-    };
-    img.src = imgData.preview;
-  };
-
-  useEffect(() => {
-    if (selectedIdx !== null) loadCurrentImage();
   }, [selectedIdx]);
 
   // fetch existing albums for chooser
@@ -173,6 +142,8 @@ const CreateImage = ({ onClose }) => {
       name: file.name,
       slug: "",
       slugEdited: false,
+      exposure: "public",
+      password: "",
       canvasState: [],
       historyStep: -1,
       tool: "pen",
@@ -333,6 +304,14 @@ const CreateImage = ({ onClose }) => {
         formData.append("slug", finalSlug);
         formData.append("albumId", albumId);
         formData.append("albumTitle", finalAlbumTitle);
+        // include album exposure when creating/selecting album
+        if (addToAlbum) formData.append("albumExposure", albumExposure);
+        // include image exposure and password when set
+        const exposureToUse = addToAlbum ? albumExposure : (imgData.exposure || "public");
+        formData.append("exposure", exposureToUse);
+        if (!addToAlbum && imgData.exposure === "password_protected") {
+          formData.append("password", imgData.password || "");
+        }
         // indicate whether this slug was explicitly edited by the user
         formData.append("isCustomSlug", imgData.slugEdited ? "true" : "false");
 
@@ -351,11 +330,21 @@ const CreateImage = ({ onClose }) => {
         }
 
         uploadedImages.push(res.data.imageUrl);
+        // build share link for this image (always slug-only)
+        const base = BACKEND_URL.replace(/\/$/, "");
+        const imgSlug = res.data?.image?.slug || finalSlug;
+        const link = `${base}/share/image/${imgSlug}`;
+        uploadedImages[uploadedImages.length - 1] = { url: res.data.imageUrl, link, slug: imgSlug };
       }
 
-      const albumLink = `https://gizmo.app/album/${albumId}`;
-      setShareLink(albumLink);
-      alert(`Album created successfully!\nLink: ${albumLink}\n${images.length} images uploaded!`);
+      // Show per-image share links (do not show album link when adding into album)
+      const links = uploadedImages.map(i => i.link || i);
+      setShareLinks(links);
+      if (addToAlbum) {
+        alert(`Images uploaded into album \n${images.length} images uploaded!`);
+      } else {
+        alert(`Images uploaded\n${images.length} images uploaded!`);
+      }
     } catch (err) {
       console.error("Upload error:", err);
       alert("Upload failed: " + (err.response?.data?.message || err.message || "Please check server console"));
@@ -381,34 +370,22 @@ const CreateImage = ({ onClose }) => {
 
         {addToAlbum ? (
           <>
-            <input
-              type="text"
-              placeholder="Album title"
-              value={albumTitle}
-              onChange={e => setAlbumTitle(e.target.value)}
-              style={{ width: "100%", padding: 12, marginBottom: 12, borderRadius: 8, border: "1px solid #ddd" }}
-            />
-
-            <input
-              type="text"
-              placeholder="Album slug"
-              value={albumSlug}
-              onChange={e => { setAlbumSlug(e.target.value); }}
-              style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 8, border: "1px solid #ddd" }}
-            />
-            {availableAlbumSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This album URL is already taken — you can select it from existing albums.</div>}
-
-            {showAlbumChooser && albumsList.length > 0 && (
+            {showAlbumChooser ? (
               <div style={{ marginTop: 8 }}>
-                <label style={{ fontSize: 14, fontWeight: "bold" }}>Or select existing album</label>
+                <label style={{ fontSize: 14, fontWeight: "bold" }}>Select existing album</label>
                 <select style={{ width: "100%", padding: 10, marginTop: 6 }} onChange={e => {
                   const v = e.target.value;
-                  if (!v) return;
+                  if (!v) {
+                    setAlbumSlug("");
+                    setAlbumTitle("");
+                    setAvailableAlbumSlug(null);
+                    return;
+                  }
                   const sel = albumsList.find(a => a.slug === v);
                   if (sel) {
                     setAlbumSlug(sel.slug);
                     setAlbumTitle(sel.name);
-                    setAddToAlbum(true);
+                    setAlbumExposure(sel.exposure || "private");
                     setAvailableAlbumSlug(true);
                   }
                 }} value={albumSlug || ""}>
@@ -417,7 +394,55 @@ const CreateImage = ({ onClose }) => {
                     <option key={a._id} value={a.slug}>{a.name} ({a.slug})</option>
                   ))}
                 </select>
+
+                {albumSlug ? (
+                  <div style={{ marginTop: 8, padding: 8, background: "#fafafa", borderRadius: 8 }}>
+                    <div style={{ fontWeight: "bold" }}>{albumTitle}</div>
+                    <div style={{ color: "#666", fontSize: 13 }}>Visibility: {albumExposure}</div>
+                    <div style={{ marginTop: 8 }}>
+                      <button onClick={() => { setShowAlbumChooser(false); setAlbumSlug(""); setAlbumTitle(""); setAvailableAlbumSlug(null); }} style={{ padding: "6px 10px" }}>Use new album instead</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 8, color: "#666", fontSize: 13 }}>No album selected — pick an existing album or toggle to create a new one.</div>
+                )}
               </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Album title"
+                  value={albumTitle}
+                  onChange={e => setAlbumTitle(e.target.value)}
+                  style={{ width: "100%", padding: 12, marginBottom: 12, borderRadius: 8, border: "1px solid #ddd" }}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Album slug"
+                  value={albumSlug}
+                  onChange={e => { setAlbumSlug(e.target.value); checkAlbumSlug(e.target.value); }}
+                  style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 8, border: "1px solid #ddd" }}
+                />
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontWeight: "bold", display: "block", marginBottom: 6 }}>Album access</label>
+                  <select value={albumExposure} onChange={e => setAlbumExposure(e.target.value)} style={{ width: "100%", padding: 10 }}>
+                    <option value="public">Public</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="private">Private</option>
+                  </select>
+                </div>
+                {availableAlbumSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This album URL is already taken — you can select it from existing albums.</div>}
+
+                {albumsList.length > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <label style={{ fontSize: 14, fontWeight: "bold" }}>Or select existing album</label>
+                    <div>
+                      <button type="button" onClick={() => setShowAlbumChooser(true)} style={{ padding: "6px 10px", marginTop: 6 }}>Choose existing</button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         ) : (
@@ -452,10 +477,16 @@ const CreateImage = ({ onClose }) => {
           {isUploading ? "Uploading..." : "Upload"}
         </button>
 
-        {shareLink && (
-          <div style={{ marginTop: 16, padding: 16, background: "#d4edda", borderRadius: 10, textAlign: "center", fontWeight: "bold" }}>
-            Album ready!<br />
-            <a href={shareLink} target="_blank" rel="noopener noreferrer" style={{ color: "#27ae60" }}>{shareLink}</a>
+        {shareLinks.length > 0 && (
+          <div style={{ marginTop: 16, padding: 16, background: "#d4edda", borderRadius: 10 }}>
+            <div style={{ fontWeight: "bold", marginBottom: 8 }}>{addToAlbum ? "Images uploaded into album" : "Images uploaded"}</div>
+            <ul style={{ paddingLeft: 20, margin: 0 }}>
+              {shareLinks.map((l, i) => (
+                <li key={i} style={{ marginBottom: 6 }}>
+                  <a href={l} target="_blank" rel="noopener noreferrer">{l}</a>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
@@ -475,6 +506,25 @@ const CreateImage = ({ onClose }) => {
             />
             <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
             {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
+            <div style={{ marginTop: 8 }}>
+              <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
+              <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }} disabled={addToAlbum}>
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+                <option value="password_protected">Password protected</option>
+              </select>
+              {!addToAlbum && currentImage.exposure === "password_protected" && (
+                <input
+                  type="text"
+                  placeholder="Password to view this image"
+                  value={currentImage.password || ""}
+                  onChange={e => updateImageProp("password", e.target.value)}
+                  style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
+                />
+              )}
+              {addToAlbum && <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>Image access will follow album access.</div>}
+            </div>
           </div>
         )}
 
