@@ -383,7 +383,7 @@ const CreateImage = ({ onClose }) => {
           <>
             <input
               type="text"
-              placeholder="Album title (required when adding into album)"
+              placeholder="Album title"
               value={albumTitle}
               onChange={e => setAlbumTitle(e.target.value)}
               style={{ width: "100%", padding: 12, marginBottom: 12, borderRadius: 8, border: "1px solid #ddd" }}
@@ -391,7 +391,7 @@ const CreateImage = ({ onClose }) => {
 
             <input
               type="text"
-              placeholder="Album URL / slug (required when adding into album)"
+              placeholder="Album slug"
               value={albumSlug}
               onChange={e => { setAlbumSlug(e.target.value); }}
               style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 8, border: "1px solid #ddd" }}
@@ -449,7 +449,7 @@ const CreateImage = ({ onClose }) => {
           disabled={isUploading || images.length === 0}
           style={{ marginTop: 24, width: "100%", padding: 16, background: isUploading ? "#95a5a6" : "#27ae60", color: "white", border: "none", borderRadius: 10, fontSize: 18, fontWeight: "bold" }}
         >
-          {isUploading ? "Uploading Album..." : "Create Album & Share"}
+          {isUploading ? "Uploading..." : "Upload"}
         </button>
 
         {shareLink && (
