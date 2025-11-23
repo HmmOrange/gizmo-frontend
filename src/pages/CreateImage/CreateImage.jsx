@@ -117,14 +117,32 @@ const CreateImage = ({ onClose }) => {
   };
 
   // slug-checking removed: no backend validation for slugs
-  const checkImageSlug = debounce((slug) => {
-    // no-op: we no longer validate slugs server-side
-    setAvailableImageSlug(null);
+  const checkImageSlug = debounce(async (slug) => {
+    const s = (slug || "").trim();
+    if (!s) {
+      setAvailableImageSlug(null);
+      return;
+    }
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/images/check-slug`, { params: { slug: s } });
+      setAvailableImageSlug(res.data.available === true);
+    } catch (err) {
+      setAvailableImageSlug(null);
+    }
   }, 400);
 
-  const checkAlbumSlug = debounce((slug) => {
-    // no-op: we no longer validate album slugs server-side
-    setAvailableAlbumSlug(null);
+  const checkAlbumSlug = debounce(async (slug) => {
+    const s = (slug || "").trim();
+    if (!s) {
+      setAvailableAlbumSlug(null);
+      return;
+    }
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/albums/check-slug`, { params: { slug: s } });
+      setAvailableAlbumSlug(res.data.available === true);
+    } catch (err) {
+      setAvailableAlbumSlug(null);
+    }
   }, 400);
 
   const undo = () => {
@@ -192,6 +210,9 @@ const CreateImage = ({ onClose }) => {
       if (prop === "slug") updated[selectedIdx].slugEdited = true;
       return updated;
     });
+    if (prop === "slug") {
+      checkImageSlug(value);
+    }
   };
 
   const start = (e) => {
@@ -273,6 +294,24 @@ const CreateImage = ({ onClose }) => {
 
       // No server-side slug checking: use unique slugs within the batch
       const finalSlugs = batchUnique;
+
+      // Bulk-check final slugs against server to avoid conflicts
+      try {
+        const bulk = await axios.post(`${BACKEND_URL}/api/images/check-slugs-bulk`, { slugs: finalSlugs });
+        const results = bulk.data.results || {};
+        const taken = finalSlugs.filter(s => results[s] === false);
+        if (taken.length) {
+          alert(`The following slugs are already taken: ${taken.join(", ")}. Please change them and try again.`);
+          setIsUploading(false);
+          return;
+        }
+      } catch (err) {
+        // If bulk check fails, stop to avoid accidental overwrites
+        console.error("Slug bulk-check failed:", err);
+        alert("Failed to validate image slugs. Please try again later.");
+        setIsUploading(false);
+        return;
+      }
 
       const uploadedImages = [];
 
