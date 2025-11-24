@@ -26,11 +26,11 @@ const CreateImage = ({ onClose }) => {
   const [shareLinks, setShareLinks] = useState([]);
 
   const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
 
-  // Thêm biến FRONTEND_URL để lấy base URL của frontend
   const FRONTEND_URL = window.location.origin;
 
   useEffect(() => {
@@ -124,10 +124,18 @@ const CreateImage = ({ onClose }) => {
     fetchAlbums();
   }, []);
 
-  // Lấy token từ localStorage khi mount
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
-    if (savedToken) setToken(savedToken);
+    if (savedToken) {
+      setToken(savedToken);
+      try {
+        const payload = JSON.parse(atob(savedToken.split('.')[1]));
+        console.log("JWT payload:", payload); 
+        setUserId(payload.user_id || null);
+      } catch (err) {
+        setUserId(null);
+      }
+    }
   }, []);
 
   // debounce helpers
@@ -418,6 +426,14 @@ const CreateImage = ({ onClose }) => {
 
   const currentImage = selectedIdx !== null ? images[selectedIdx] : null;
 
+  // Filter albums for chooser: only show public, or private/unlisted if user is author
+  const allowedAlbums = albumsList.filter(a => {
+    console.log(userId); // Use a._id or a.slug for debugging, not a.albumId
+    if (a.exposure === "public") return true;
+    if ((a.exposure === "private" || a.exposure === "unlisted") && userId && a.authorId === userId) return true;
+    return false;
+  });
+
   return (
     <>
       <NavBar token={token} setToken={setToken} />
@@ -447,7 +463,8 @@ const CreateImage = ({ onClose }) => {
                       setAvailableAlbumSlug(null);
                       return;
                     }
-                    const sel = albumsList.find(a => a.slug === v);
+                    // Only allow selection if album is allowed
+                    const sel = allowedAlbums.find(a => a.slug === v);
                     if (sel) {
                       setAlbumSlug(sel.slug);
                       setAlbumTitle(sel.name);
@@ -456,7 +473,7 @@ const CreateImage = ({ onClose }) => {
                     }
                   }} value={albumSlug || ""}>
                     <option value="">-- choose an album --</option>
-                    {albumsList.map(a => (
+                    {allowedAlbums.map(a => (
                       <option key={a._id} value={a.slug}>{a.name} ({a.slug})</option>
                     ))}
                   </select>

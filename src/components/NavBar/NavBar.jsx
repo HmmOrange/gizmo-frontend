@@ -8,9 +8,12 @@ export default function NavBar() {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
 
+  // Check for token in localStorage
+  const isLoggedIn = Boolean(localStorage.getItem('token'));
+
   return (
     <div className="relative w-full">
-    <Navbar01 />
-  </div>
+      <Navbar01 showProfile={isLoggedIn} onProfileClick={() => navigate('/profile')} />
+    </div>
   );
 }

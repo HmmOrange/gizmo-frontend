@@ -72,6 +72,8 @@ export const Navbar01 = React.forwardRef((
     ctaHref = '/signup',
     onSignInClick,
     onCtaClick,
+    showProfile = false,
+    onProfileClick,
     ...props
   },
   ref
@@ -204,33 +206,51 @@ export const Navbar01 = React.forwardRef((
         </div>
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-            onClick={(e) => {
-              e.preventDefault();
-              if (onSignInClick) {
-                onSignInClick();
-              } else {
-                handleNavigation('/login');
-              }
-            }}>
-            {signInText}
-          </Button>
-          <Button
-            size="sm"
-            className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
-            onClick={(e) => {
-              e.preventDefault();
-              if (onCtaClick) {
-                onCtaClick();
-              } else {
-                handleNavigation('/signup');
-              }
-            }}>
-            {ctaText}
-          </Button>
+          {showProfile ? (
+            <Button
+              size="sm"
+              className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onProfileClick) {
+                  onProfileClick();
+                } else {
+                  handleNavigation('/profile');
+                }
+              }}>
+              Profile
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onSignInClick) {
+                    onSignInClick();
+                  } else {
+                    handleNavigation('/login');
+                  }
+                }}>
+                {signInText}
+              </Button>
+              <Button
+                size="sm"
+                className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onCtaClick) {
+                    onCtaClick();
+                  } else {
+                    handleNavigation('/signup');
+                  }
+                }}>
+                {ctaText}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

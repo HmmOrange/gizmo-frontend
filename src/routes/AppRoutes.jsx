@@ -10,6 +10,7 @@ import CreateImage from "../pages/CreateImage/CreateImage.jsx";
 import ShareImage from "../pages/CreateImage/ShareImage.jsx";
 import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx";
 import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx";
+import Profile from "../pages/Profile/Profile.jsx";
 
 export default function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ export default function AppRoutes() {
         <Route path="/share/image/:slug" element={<ShareImage />} />
         <Route path="/share/album/:slug" element={<ShareAlbum />} />
         <Route path="/auth/success" element={<AuthCallback />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );
