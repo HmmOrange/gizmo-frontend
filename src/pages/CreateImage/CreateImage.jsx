@@ -27,6 +27,7 @@ const CreateImage = ({ onClose }) => {
 
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [ocrText, setOcrText] = useState("");
 
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
@@ -299,10 +300,25 @@ const CreateImage = ({ onClose }) => {
     const formData = new FormData();
     formData.append("image", file);
 
-    const res = await axios.post(`${BACKEND_URL}/api/ocr`, formData);
-    
-    alert("OCR Result:\n\n" + res.data.text);
+    try {
+      const res = await axios.post(`${BACKEND_URL}/api/ocr`, formData);
+
+      const text = (res.data.text || "").trim();
+
+      if (!text) {
+        alert("Cannot detect any text");
+        setOcrText("");
+        return;
+      }
+
+      setOcrText(text);
+
+    } catch (e) {
+      console.error(e);
+      alert("OCR failed.");
+    }
   };
+
 
   const handleCreateAlbum = async () => {
     if (images.length === 0) return alert("Please upload at least one image!");
@@ -673,6 +689,42 @@ const CreateImage = ({ onClose }) => {
             <button onClick={clearCanvas} style={{ background: "#e74c3c", color: "white" }}>Clear</button>
             <button onClick={handleOCR} style={{ background: "#8e44ad", color: "white" }}>OCR</button>
           </div>
+
+          <div style={{ textAlign: "center", background: "#fafafa", borderRadius: 12, padding: 40, minHeight: 600 }}>
+            {ocrText && (
+              <div style={{
+                background: "#fdf6e3",
+                border: "1px solid #e1c97a",
+                padding: "12px 16px",
+                borderRadius: 8,
+                marginBottom: 20,
+                textAlign: "left",
+                whiteSpace: "pre-wrap",
+                position: "relative"
+              }}>
+                <strong>OCR Text:</strong>
+                <div style={{ marginTop: 6 }}>{ocrText}</div>
+
+                <button
+                  onClick={() => navigator.clipboard.writeText(ocrText)}
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    padding: "4px 10px",
+                    background: "#3498db",
+                    color: "white",
+                    borderRadius: 6,
+                    fontSize: 12
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            )}
+
+          </div>
+
 
           <div style={{ textAlign: "center", background: "#fafafa", borderRadius: 12, padding: 40, minHeight: 600 }}>
             {selectedIdx === null ? (
