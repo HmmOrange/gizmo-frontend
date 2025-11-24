@@ -68,12 +68,12 @@ export default function ShareImage() {
   return (
     <>
       <NavBar />
-      <div style={{ 
-        minHeight: "100vh", 
-        background: "#f0f2f5", 
-        display: "flex", 
+      <div style={{
+        minHeight: "100vh",
+        background: "#f0f2f5",
+        display: "flex",
         flexDirection: "column",
-        alignItems: "center", 
+        alignItems: "center",
         padding: "40px 20px",
         fontFamily: "system-ui, sans-serif"
       }}>
