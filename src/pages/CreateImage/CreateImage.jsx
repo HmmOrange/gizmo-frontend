@@ -290,6 +290,20 @@ const CreateImage = ({ onClose }) => {
     saveState();
   };
 
+  const handleOCR = async () => {
+    if (!currentImage) return;
+
+    const blob = await fetch(currentImage.preview).then(r => r.blob());
+    const file = new File([blob], "image.png", { type: "image/png" });
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await axios.post(`${BACKEND_URL}/api/ocr`, formData);
+    
+    alert("OCR Result:\n\n" + res.data.text);
+  };
+
   const handleCreateAlbum = async () => {
     if (images.length === 0) return alert("Please upload at least one image!");
     if (selectedIdx !== null) saveState();
@@ -657,6 +671,7 @@ const CreateImage = ({ onClose }) => {
             <button onClick={undo} disabled={!currentImage || currentImage.historyStep <= 0}>Undo</button>
             <button onClick={redo} disabled={!currentImage || currentImage.historyStep >= currentImage.canvasState.length - 1}>Redo</button>
             <button onClick={clearCanvas} style={{ background: "#e74c3c", color: "white" }}>Clear</button>
+            <button onClick={handleOCR} style={{ background: "#8e44ad", color: "white" }}>OCR</button>
           </div>
 
           <div style={{ textAlign: "center", background: "#fafafa", borderRadius: 12, padding: 40, minHeight: 600 }}>
