@@ -1,22 +1,28 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NavBar from "../components/NavBar/NavBar";
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import NavBar from "../components/NavBar/NavBar"
+import Footer from "../components/Footer/footer"
+import { useLocation } from "react-router-dom"
 
-import Landing from "../pages/Landing/Landing";
-import Login from "../pages/Login/Login.jsx";
-import SignUp from "../pages/SignUp/SignUp.jsx";
-import CreatePaste from "../pages/CreatePaste/CreatePaste.jsx";
-import SharePaste from "../pages/CreatePaste/SharePaste.jsx";
-import EditPaste from "../pages/CreatePaste/EditPaste.jsx";
-import CreateImage from "../pages/CreateImage/CreateImage.jsx";
-import ShareImage from "../pages/CreateImage/ShareImage.jsx";
-import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx";
-import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx";
-import Profile from "../pages/Profile/Profile.jsx";
-import FeedPage from "../pages/Feed/FeedPage.jsx";
+import Landing from "../pages/Landing/Landing"
+import Login from "../pages/Login/Login.jsx"
+import SignUp from "../pages/SignUp/SignUp.jsx"
+import CreatePaste from "../pages/CreatePaste/CreatePaste.jsx"
+import SharePaste from "../pages/CreatePaste/SharePaste.jsx"
+import EditPaste from "../pages/CreatePaste/EditPaste.jsx"
+import CreateImage from "../pages/CreateImage/CreateImage.jsx"
+import ShareImage from "../pages/CreateImage/ShareImage.jsx"
+import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx"
+import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx"
+import Profile from "../pages/Profile/Profile.jsx"
+import FeedPage from "../pages/Feed/FeedPage.jsx"
 
-export default function AppRoutes() {
+function AppContent() {
+  const location = useLocation()
+
+  const hideFooter = location.pathname === "/login" || location.pathname === "/signup"
+
   return (
-    <BrowserRouter>
+    <>
       <NavBar />
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -32,6 +38,15 @@ export default function AppRoutes() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/feed" element={<FeedPage />} />
       </Routes>
+      {!hideFooter && <Footer />}
+    </>
+  )
+}
+
+export default function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
-  );
+  )
 }
