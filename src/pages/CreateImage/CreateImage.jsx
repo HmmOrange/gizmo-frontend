@@ -135,6 +135,9 @@ const CreateImage = ({ onClose }) => {
       } catch (err) {
         setUserId(null);
       }
+    } else {
+      setToken(null);
+      setUserId(null);
     }
   }, []);
 
@@ -428,7 +431,8 @@ const CreateImage = ({ onClose }) => {
 
   // Filter albums for chooser: only show public, or private/unlisted if user is author
   const allowedAlbums = albumsList.filter(a => {
-    console.log(userId); // Use a._id or a.slug for debugging, not a.albumId
+    // Only show public albums if not logged in
+    if (!token) return a.exposure === "public";
     if (a.exposure === "public") return true;
     if ((a.exposure === "private" || a.exposure === "unlisted") && userId && a.authorId === userId) return true;
     return false;
@@ -520,8 +524,9 @@ const CreateImage = ({ onClose }) => {
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: 6 }}>Album access</label>
                     <select value={albumExposure} onChange={e => setAlbumExposure(e.target.value)} style={{ width: "100%", padding: 10 }}>
                       <option value="public">Public</option>
-                      <option value="unlisted">Unlisted</option>
-                      <option value="private">Private</option>
+                      {/* Only show unlisted/private if logged in */}
+                      {token && <option value="unlisted">Unlisted</option>}
+                      {token && <option value="private">Private</option>}
                     </select>
                   </div>
                   {availableAlbumSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This album URL is already taken — you can select it from existing albums.</div>}
@@ -607,8 +612,9 @@ const CreateImage = ({ onClose }) => {
                     <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
                     <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }}>
                       <option value="public">Public</option>
-                      <option value="unlisted">Unlisted</option>
-                      <option value="private">Private</option>
+                      {/* Only show unlisted/private if logged in */}
+                      {token && <option value="unlisted">Unlisted</option>}
+                      {token && <option value="private">Private</option>}
                       <option value="password_protected">Password protected</option>
                     </select>
                     {currentImage.exposure === "password_protected" && (
