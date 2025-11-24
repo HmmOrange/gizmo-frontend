@@ -46,7 +46,7 @@ export default function Login() {
 
   return (
     <div
-      className="flex min-h-svh w-full flex-col items-center justify-center gap-6 p-6 md:p-10"
+      className="fixed inset-0 flex w-full flex-col items-center justify-center gap-6 p-6 md:p-10"
       style={{ backgroundColor: "#f5f5f5" }}
     >
       <div className="flex items-center gap-3">

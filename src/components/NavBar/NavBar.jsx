@@ -21,7 +21,7 @@ export default function NavBar() {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-16">
       <Navbar01
         user={user}
         onLogout={handleLogout}

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import NavBar from "../components/NavBar/NavBar";
 
 import Landing from "../pages/Landing/Landing";
 import Login from "../pages/Login/Login.jsx";
@@ -14,6 +15,7 @@ import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <NavBar />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
