@@ -211,6 +211,7 @@ const CreateImage = ({ onClose }) => {
       slugEdited: false,
       exposure: "public",
       password: "",
+      caption: "", // Thêm trường caption
       canvasState: [],
       historyStep: -1,
       tool: "pen",
@@ -381,6 +382,10 @@ const CreateImage = ({ onClose }) => {
         }
         // indicate whether this slug was explicitly edited by the user
         formData.append("isCustomSlug", imgData.slugEdited ? "true" : "false");
+        // Thêm caption nếu có
+        if (imgData.caption && imgData.caption.trim() !== "") {
+          formData.append("caption", imgData.caption.trim());
+        }
 
         let res;
         try {
@@ -603,6 +608,17 @@ const CreateImage = ({ onClose }) => {
               />
               <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
               {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
+              {/* Thêm input caption */}
+              <div style={{ marginTop: 8 }}>
+                <label style={{ fontWeight: "bold", display: "block", marginBottom: 4 }}>Caption (optional)</label>
+                <input
+                  type="text"
+                  placeholder="Enter caption for this image"
+                  value={currentImage.caption || ""}
+                  onChange={e => updateImageProp("caption", e.target.value)}
+                  style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #ddd", marginBottom: 8 }}
+                />
+              </div>
               <div style={{ marginTop: 8 }}>
                 {/* Nếu addToAlbum, chỉ hiển thị thông báo, không cho chọn exposure/password */}
                 {addToAlbum ? (
