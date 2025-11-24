@@ -20,6 +20,9 @@ export default function NavBar() {
     // Add your notification logic here
   }
 
+  // Check for token in localStorage
+  const isLoggedIn = Boolean(localStorage.getItem('token'));
+
   return (
     <div className="relative w-full h-16">
       <Navbar01
