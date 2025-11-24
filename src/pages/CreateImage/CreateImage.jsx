@@ -25,6 +25,8 @@ const CreateImage = ({ onClose }) => {
   const [shareLink, setShareLink] = useState("");
   const [shareLinks, setShareLinks] = useState([]);
 
+  const [token, setToken] = useState(null);
+
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
 
@@ -120,6 +122,12 @@ const CreateImage = ({ onClose }) => {
       }
     };
     fetchAlbums();
+  }, []);
+
+  // Lấy token từ localStorage khi mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) setToken(savedToken);
   }, []);
 
   // debounce helpers
@@ -365,9 +373,17 @@ const CreateImage = ({ onClose }) => {
 
         let res;
         try {
-          res = await axios.post(`${BACKEND_URL}/api/images`, formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-          });
+          res = await axios.post(
+            `${BACKEND_URL}/api/images`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                // Thêm Authorization nếu có token
+                ...(token ? { Authorization: "Bearer " + token } : {})
+              }
+            }
+          );
         } catch (err) {
           if (err.response?.status === 409) {
             alert(`Upload failed: slug \"${finalSlug}\" is already taken. Please change the slug and try again.`);
@@ -404,7 +420,7 @@ const CreateImage = ({ onClose }) => {
 
   return (
     <>
-      <NavBar></NavBar>
+      <NavBar token={token} setToken={setToken} />
     
       <div style={{ display: "flex", gap: 24, padding: 20, background: "#f5f7fa", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ width: 380, background: "white", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", padding: 20 }}>
@@ -566,23 +582,29 @@ const CreateImage = ({ onClose }) => {
               <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
               {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
               <div style={{ marginTop: 8 }}>
-                <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
-                <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }} disabled={addToAlbum}>
-                  <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="private">Private</option>
-                  <option value="password_protected">Password protected</option>
-                </select>
-                {!addToAlbum && currentImage.exposure === "password_protected" && (
-                  <input
-                    type="text"
-                    placeholder="Password to view this image"
-                    value={currentImage.password || ""}
-                    onChange={e => updateImageProp("password", e.target.value)}
-                    style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
-                  />
+                {/* Nếu addToAlbum, chỉ hiển thị thông báo, không cho chọn exposure/password */}
+                {addToAlbum ? (
+                  <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>Image access will follow album access.</div>
+                ) : (
+                  <>
+                    <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
+                    <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }}>
+                      <option value="public">Public</option>
+                      <option value="unlisted">Unlisted</option>
+                      <option value="private">Private</option>
+                      <option value="password_protected">Password protected</option>
+                    </select>
+                    {currentImage.exposure === "password_protected" && (
+                      <input
+                        type="text"
+                        placeholder="Password to view this image"
+                        value={currentImage.password || ""}
+                        onChange={e => updateImageProp("password", e.target.value)}
+                        style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
+                      />
+                    )}
+                  </>
                 )}
-                {addToAlbum && <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>Image access will follow album access.</div>}
               </div>
             </div>
           )}

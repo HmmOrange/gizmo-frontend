@@ -21,19 +21,29 @@ export default function ShareImage() {
     try {
       const url = `${BACKEND_URL.replace(/\/$/, "")}/share/image/${encodeURIComponent(slug)}`;
       const res = await axios.get(url, { params: pw ? { password: pw } : {} });
-      setImage(res.data.image || null);
-      setNeedsPassword(false);
+      if (res.data && res.data.requirePassword) {
+        setNeedsPassword(true);
+        setImage(null);
+      } else {
+        setImage(res.data.image || null);
+        setNeedsPassword(false);
+      }
     } catch (err) {
       const status = err.response?.status;
       const msg = err.response?.data?.message || err.message;
-      if (status === 401 && String(msg).toLowerCase().includes("password")) {
+      // If backend returns requirePassword in error
+      if (err.response?.data?.requirePassword) {
         setNeedsPassword(true);
+        setImage(null);
+      } else if (status === 401 && String(msg).toLowerCase().includes("password")) {
+        setNeedsPassword(true);
+        setImage(null);
       } else if (status === 403) {
-        setError("Bạn không có quyền xem ảnh này");
+        setError("You do not have permission to view this image");
       } else if (status === 404) {
-        setError("Không tìm thấy ảnh");
+        setError("Image not found");
       } else {
-        setError("Lỗi khi tải ảnh: " + msg);
+        setError("Error loading image: " + msg);
       }
     } finally {
       setLoading(false);
@@ -67,7 +77,7 @@ export default function ShareImage() {
 
         {!loading && needsPassword && (
           <div style={{ marginBottom: 12, textAlign: "center" }}>
-            <p>Ảnh được bảo vệ bằng mật khẩu. Vui lòng nhập mật khẩu để xem.</p>
+            <p>This image is password protected. Please enter the password to view.</p>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ padding: 8, width: 240 }} />
             <div style={{ marginTop: 8 }}>
               <button onClick={() => fetchImage(password)} style={{ padding: "8px 12px" }}>Submit</button>
