@@ -6,6 +6,8 @@ import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import { LoginForm } from "@/components/login-form";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
@@ -20,7 +22,7 @@ export default function Login() {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+        `${BACKEND_URL}/api/auth/login`,
         { username, password },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -38,7 +40,7 @@ export default function Login() {
 
   function handleMicrosoftLogin() {
     setLoading(true);
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/oauth/microsoft`;
+    window.location.href = `${BACKEND_URL}/api/auth/oauth/microsoft`;
   }
 
   return (
