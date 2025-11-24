@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { SignupForm } from "@/components/signup-form";
+import logoImage from '@/assets/logo.png';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -54,7 +55,15 @@ export default function SignUp() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <div
+      className="fixed inset-0 flex w-full flex-col items-center justify-center gap-6 p-6 md:p-10"
+      style={{ backgroundColor: "#f5f5f5" }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Ensure you have a logo image at this path or update it */}
+        <img src={logoImage} alt="Gizmo" className="h-20 w-20" />
+        <span className="text-4xl font-bold">Gizmo</span>
+      </div>
       <div className="w-full max-w-sm">
         <SignupForm
           username={username}
