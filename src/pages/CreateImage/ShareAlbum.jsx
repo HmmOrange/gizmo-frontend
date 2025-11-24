@@ -10,6 +10,13 @@ export default function ShareAlbum() {
   const [loading, setLoading] = useState(true);
   const [album, setAlbum] = useState(null);
   const [error, setError] = useState(null);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    // Lấy token từ localStorage khi mount
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) setToken(savedToken);
+  }, []);
 
   useEffect(() => {
     const fetchAlbum = async () => {
@@ -17,7 +24,9 @@ export default function ShareAlbum() {
       setError(null);
       try {
         const url = `${BACKEND_URL.replace(/\/$/, "")}/share/album/${encodeURIComponent(slug)}`;
-        const res = await axios.get(url);
+        const res = await axios.get(url, {
+          headers: token ? { Authorization: "Bearer " + token } : {},
+        });
         setAlbum(res.data.album || null);
       } catch (err) {
         const msg = err.response?.data?.message || err.message;
@@ -27,7 +36,7 @@ export default function ShareAlbum() {
       }
     };
     fetchAlbum();
-  }, [slug]);
+  }, [slug, token]);
 
   return (
     <>
@@ -36,7 +45,7 @@ export default function ShareAlbum() {
       <div style={{ minHeight: "100vh", background: "#f6f8fa", padding: 40, fontFamily: "system-ui, sans-serif" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           {loading && <p>Loading album...</p>}
-          {!loading && error && <div style={{ color: "#e74c3c" }}>Error: {String(error)}</div>}
+          {!loading && error && !album && <div style={{ color: "#e74c3c" }}>Error: {String(error)}</div>}
           {!loading && album && (
             <div>
               <h1 style={{ marginBottom: 6 }}>{album.name}</h1>

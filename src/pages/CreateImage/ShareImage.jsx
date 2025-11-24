@@ -14,13 +14,23 @@ export default function ShareImage() {
   const [error, setError] = useState(null);
   const [password, setPassword] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    // Lấy token từ localStorage khi mount
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) setToken(savedToken);
+  }, []);
 
   const fetchImage = async (pw = null) => {
     setLoading(true);
     setError(null);
     try {
       const url = `${BACKEND_URL.replace(/\/$/, "")}/share/image/${encodeURIComponent(slug)}`;
-      const res = await axios.get(url, { params: pw ? { password: pw } : {} });
+      const res = await axios.get(url, {
+        params: pw ? { password: pw } : {},
+        headers: token ? { Authorization: "Bearer " + token } : {},
+      });
       if (res.data && res.data.requirePassword) {
         setNeedsPassword(true);
         setImage(null);
@@ -53,7 +63,7 @@ export default function ShareImage() {
   useEffect(() => {
     fetchImage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug, token]);
 
   return (
     <>
@@ -71,7 +81,7 @@ export default function ShareImage() {
 
         {loading && <p>Loading...</p>}
 
-        {!loading && error && (
+        {!loading && error && !image && (
           <div style={{ color: "#e74c3c", marginBottom: 12 }}>{error}</div>
         )}
 
