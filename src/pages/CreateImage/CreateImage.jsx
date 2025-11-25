@@ -655,7 +655,7 @@ ${images.length} images uploaded!`);
               <ul style={{ paddingLeft: 20, margin: 0 }}>
                 {shareLinks.map((l, i) => (
                   <li key={i} style={{ marginBottom: 6 }}>
-                    <a href={l} target="_blank" rel="noopener noreferrer">{l}</a>
+                    <a href={l} target="_blank" rel="noopener noreferrer" style={{ wordBreak: "break-all" }}>{l}</a>
                   </li>
                 ))}
               </ul>
