@@ -13,7 +13,9 @@ export default function FeedItemCard({ type, item }) {
                 />
                 <div className="p-3">
                     <p className="font-medium truncate">{item.slug || "No caption"}</p>
-                    <p className="text-sm text-gray-500">{item.views} views</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                        {item.views || 0} views • {item.bookmarks || 0} bookmarks
+                    </p>
                 </div>
             </a>
         );
@@ -32,7 +34,7 @@ export default function FeedItemCard({ type, item }) {
                     {item.content}
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
-                    {item.views || 0} views
+                    {item.views || 0} views • {item.bookmarks || 0} bookmarks
                 </p>
             </a>
         );
