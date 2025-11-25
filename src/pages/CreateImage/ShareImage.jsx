@@ -125,7 +125,7 @@ export default function ShareImage() {
               }} style={{ padding: '8px 12px', background: bookmarked ? '#ffb6c1' : '#f0f0f0', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                 {bookmarked ? 'Bookmarked' : 'Bookmark'}
               </button>
-              <div style={{ color: '#666' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
+              <div style={{ color: '#666', display: 'none' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
             </div>
 
             {/* QR Code */}
