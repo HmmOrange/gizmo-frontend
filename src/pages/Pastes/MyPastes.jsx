@@ -1,154 +1,214 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fetchUserPastes } from '../../lib/api';
+"use client"
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { fetchUserPastes } from "../../lib/api"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FileText, Eye, Heart } from "lucide-react"
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 
 function shortText(text, len = 120) {
-  if (!text) return '';
-  return text.length > len ? text.slice(0, len) + '...' : text;
+  if (!text) return ""
+  return text.length > len ? text.slice(0, len) + "..." : text
 }
 
 export default function MyPastes() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const navigate = useNavigate()
+  const token = localStorage.getItem("token")
 
-  const [loading, setLoading] = useState(true);
-  const [pastes, setPastes] = useState([]);
-  const [bookmarkedPastes, setBookmarkedPastes] = useState([]);
-  const [bookmarksObj, setBookmarksObj] = useState(null);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true)
+  const [pastes, setPastes] = useState([])
+  const [bookmarkedPastes, setBookmarkedPastes] = useState([])
+  const [bookmarksObj, setBookmarksObj] = useState(null)
+  const [error, setError] = useState(null)
 
-  const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState('views'); // 'views' or 'bookmarks'
-  const [activeTab, setActiveTab] = useState('mine'); // 'mine' or 'bookmarks'
+  const [query, setQuery] = useState("")
+  const [sortBy, setSortBy] = useState("views")
+  const [activeTab, setActiveTab] = useState("mine")
 
   useEffect(() => {
     if (!token) {
-      setError('Please sign in to view your pastes');
-      setLoading(false);
-      return;
+      setError("Please sign in to view your pastes")
+      setLoading(false)
+      return
     }
 
     const load = async () => {
-      setLoading(true);
+      setLoading(true)
       try {
-        // user pastes
-        const p = await fetchUserPastes(token);
-        console.log('Received from fetchUserPastes:', p);
-        // fetchUserPastes may return array or { pastes: [] }
-        const pastesArray = Array.isArray(p) ? p : (p.pastes || p);
-        console.log('Processed pastes array:', pastesArray);
-        setPastes(pastesArray || []);
+        const p = await fetchUserPastes(token)
+        console.log("Received from fetchUserPastes:", p)
+        const pastesArray = Array.isArray(p) ? p : p.pastes || p
+        console.log("Processed pastes array:", pastesArray)
+        setPastes(pastesArray || [])
 
-        // user bookmarks (from dashboard endpoint)
-        const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/dashboard/bookmarks`, {
-          headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch(`${BACKEND_URL.replace(/\/$/, "")}/api/dashboard/bookmarks`, {
+          headers: { Authorization: "Bearer " + token },
+        })
         if (res.ok) {
-          const json = await res.json();
-          setBookmarksObj(json);
-          // bookmarks.pastes may be an array
-          const bp = json?.pastes || [];
-          setBookmarkedPastes(bp || []);
+          const json = await res.json()
+          setBookmarksObj(json)
+          const bp = json?.pastes || []
+          setBookmarkedPastes(bp || [])
         }
       } catch (err) {
-        console.error('MyPastes load error', err);
-        setError(err.message || String(err));
+        console.error("MyPastes load error", err)
+        setError(err.message || String(err))
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    load();
-  }, [token]);
+    load()
+  }, [token])
 
-  const totalPastes = pastes.length;
-  const totalViews = pastes.reduce((s, it) => s + (Number(it.views) || 0), 0);
-  
-  window.console.log(bookmarksObj);
-  const totalBookmarksCount = (bookmarksObj)
-    ? ((bookmarksObj.pastes?.length || 0))
-    : 0;
+  const totalPastes = pastes.length
+  const totalViews = pastes.reduce((s, it) => s + (Number(it.views) || 0), 0)
+
+  window.console.log(bookmarksObj)
+  const totalBookmarksCount = bookmarksObj ? bookmarksObj.pastes?.length || 0 : 0
 
   const filterAndSort = (items) => {
-    const q = (query || '').trim().toLowerCase();
-    let filtered = Array.isArray(items) ? items.slice() : [];
-    if (q) filtered = filtered.filter(it => (it.title || it.slug || '').toLowerCase().includes(q));
+    const q = (query || "").trim().toLowerCase()
+    let filtered = Array.isArray(items) ? items.slice() : []
+    if (q) filtered = filtered.filter((it) => (it.title || it.slug || "").toLowerCase().includes(q))
 
-    const key = sortBy === 'views' ? 'views' : 'bookmarks';
-    filtered.sort((a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0));
-    return filtered;
-  };
+    const key = sortBy === "views" ? "views" : "bookmarks"
+    filtered.sort((a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0))
+    return filtered
+  }
 
   const renderPasteCard = (p) => (
-    <div key={p.pasteId || p.slug || p.id || p._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, marginBottom: 10, background: 'white', cursor: 'pointer' }} onClick={() => navigate(`/i/${p.slug || p.pasteId || p.id}`)}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontWeight: 'bold' }}>{p.title || p.slug || 'Untitled'}</div>
-        <div style={{ color: '#666', fontSize: 12 }}>{new Date(p.updatedAt || p.createdAt || p.createdAt).toLocaleString()}</div>
-      </div>
-      <div style={{ marginTop: 8, color: '#444' }}>{shortText(p.content || p.body || '', 160)}</div>
-      <div style={{ marginTop: 8, display: 'flex', gap: 12, color: '#666' }}>
-        <div>Views: {p.views || 0}</div>
-        <div>|</div>
-        <div>Favourites: {p.bookmarks ?? p.bookmarkCount ?? 0}</div>
-      </div>
-    </div>
-  );
+    <Card
+      key={p.pasteId || p.slug || p.id || p._id}
+      className="mb-3 cursor-pointer transition-shadow hover:shadow-md"
+      onClick={() => navigate(`/i/${p.slug || p.pasteId || p.id}`)}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-foreground">{p.title || p.slug || "Untitled"}</span>
+          <span className="text-xs text-muted-foreground">{new Date(p.updatedAt || p.createdAt).toLocaleString()}</span>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">{shortText(p.content || p.body || "", 160)}</p>
+        <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            <span>{p.views || 0}</span>
+          </div>
+          <span className="text-border">|</span>
+          <div className="flex items-center gap-1">
+            <Heart className="h-4 w-4" />
+            <span>{p.bookmarks ?? p.bookmarkCount ?? 0}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   return (
-    <div style={{ padding: 20, maxWidth: 900, margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
-
-      {!token && <div style={{ color: 'red' }}>Please sign in to view this page.</div>}
+    <div className="mx-auto max-w-4xl px-5 py-6">
+      {!token && <p className="text-destructive">Please sign in to view this page.</p>}
 
       {token && (
         <>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ padding: 12, borderRadius: 8, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 160 }}>
-              <div style={{ color: '#666', fontSize: 12 }}>Total Pastes</div>
-              <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalPastes}</div>
-            </div>
-            <div style={{ padding: 12, borderRadius: 8, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 200 }}>
-              <div style={{ color: '#666', fontSize: 12 }}>Total Views (your pastes)</div>
-              <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalViews}</div>
-            </div>
-            <div style={{ padding: 12, borderRadius: 8, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 200 }}>
-              <div style={{ color: '#666', fontSize: 12 }}>Your Favourites</div>
-              <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalBookmarksCount}</div>
-            </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Card>
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Pastes</p>
+                  <p className="text-2xl font-bold text-foreground">{totalPastes}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Eye className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Views (your pastes)</p>
+                  <p className="text-2xl font-bold text-foreground">{totalViews}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Heart className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Your Favourites</p>
+                  <p className="text-2xl font-bold text-foreground">{totalBookmarksCount}</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-            <button onClick={() => setActiveTab('mine')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'mine' ? '#007bff' : '#f0f0f0', color: activeTab === 'mine' ? 'white' : '#333', border: 'none' }}>My pastes</button>
-            <button onClick={() => setActiveTab('bookmarks')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'bookmarks' ? '#007bff' : '#f0f0f0', color: activeTab === 'bookmarks' ? 'white' : '#333', border: 'none' }}>Favourites</button>
+          <div className="mb-4 flex gap-3">
+            <Button variant={activeTab === "mine" ? "default" : "secondary"} onClick={() => setActiveTab("mine")}>
+              My pastes
+            </Button>
+            <Button
+              variant={activeTab === "bookmarks" ? "default" : "secondary"}
+              onClick={() => setActiveTab("bookmarks")}
+            >
+              Favourites
+            </Button>
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-            <input placeholder="Search by title" value={query} onChange={e => setQuery(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #ddd' }} />
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid #ddd' }}>
-              <option value="views">Sort by views</option>
-              <option value="bookmarks">Sort by Favourites</option>
-            </select>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              placeholder="Search by title"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1"
+            />
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="views">Sort by views</SelectItem>
+                <SelectItem value="bookmarks">Sort by Favourites</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            {loading && <div>Loading...</div>}
-            {!loading && error && <div style={{ color: 'red' }}>{error}</div>}
+            {loading && <p className="text-muted-foreground">Loading...</p>}
+            {!loading && error && <p className="text-destructive">{error}</p>}
 
-            {!loading && !error && activeTab === 'mine' && (
+            {!loading && !error && activeTab === "mine" && (
               <div>
-                {filterAndSort(pastes).length === 0 ? <div>No pastes found.</div> : filterAndSort(pastes).map(renderPasteCard)}
+                {filterAndSort(pastes).length === 0 ? (
+                  <p className="text-muted-foreground">No pastes found.</p>
+                ) : (
+                  filterAndSort(pastes).map(renderPasteCard)
+                )}
               </div>
             )}
 
-            {!loading && !error && activeTab === 'bookmarks' && (
+            {!loading && !error && activeTab === "bookmarks" && (
               <div>
-                {filterAndSort(bookmarkedPastes).length === 0 ? <div>No Favourites found.</div> : filterAndSort(bookmarkedPastes).map(renderPasteCard)}
+                {filterAndSort(bookmarkedPastes).length === 0 ? (
+                  <p className="text-muted-foreground">No Favourites found.</p>
+                ) : (
+                  filterAndSort(bookmarkedPastes).map(renderPasteCard)
+                )}
               </div>
             )}
           </div>
         </>
       )}
     </div>
-  );
+  )
 }
