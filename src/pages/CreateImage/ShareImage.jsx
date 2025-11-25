@@ -11,6 +11,8 @@ export default function ShareImage() {
   const { slug } = useParams(); // use slug-only route: /share/image/:slug
   const [loading, setLoading] = useState(true);
   const [image, setImage] = useState(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
   const [error, setError] = useState(null);
   const [password, setPassword] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
@@ -36,6 +38,8 @@ export default function ShareImage() {
         setImage(null);
       } else {
         setImage(res.data.image || null);
+        setBookmarked(!!res.data.image?.bookmarked);
+        setBookmarkCount(res.data.image?.bookmarkCount || 0);
         setNeedsPassword(false);
       }
     } catch (err) {
@@ -104,6 +108,26 @@ export default function ShareImage() {
             />
             <p style={{ marginTop: 12, color: "#666" }}>{image.caption}</p>
             <p style={{ marginTop: 6, color: "#666" }}>Link: {window.location.href}</p>
+            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={async () => {
+                  try {
+                    const tokenLocal = localStorage.getItem('token');
+                    const res = await axios.post(`${BACKEND_URL.replace(/\/$/, '')}/api/bookmarks/toggle`, { targetType: 'image', targetId: image._id }, { headers: tokenLocal ? { Authorization: 'Bearer ' + tokenLocal } : {} });
+                    setBookmarked(res.data.bookmarked);
+                    setBookmarkCount(res.data.count || 0);
+                  } catch (err) {
+                    if (err.response?.status === 401) return alert('Please sign in to bookmark');
+                    console.error(err);
+                    alert('Failed to toggle bookmark');
+                  }
+                }}
+                style={{ padding: '8px 12px', background: bookmarked ? '#ffb6c1' : '#f0f0f0', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+              >
+                {bookmarked ? 'Bookmarked' : 'Bookmark'}
+              </button>
+              <div style={{ color: '#666' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
+            </div>
           </div>
         )}
       </div>
