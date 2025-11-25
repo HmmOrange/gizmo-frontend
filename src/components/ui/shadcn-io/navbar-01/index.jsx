@@ -390,7 +390,7 @@ export const Navbar01 = React.forwardRef(
       <header
         ref={combinedRef}
         className={cn(
-          "fixed top-0 left-0 z-50 w-full border-b bg-background/95  supports-[backdrop-filter]:bg-background/60 px-4 md:px-6 [&_*]:no-underline",
+          "fixed top-0 left-0 z-50 w-full border-b bg-background px-4 md:px-6 [&_*]:no-underline",
           className
         )}
         {...props}
@@ -539,11 +539,11 @@ export const Navbar01 = React.forwardRef(
 
                     {/* Menu items */}
                     <div className="p-2">
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/settings`}>
                         <UserIcon className="mr-3 h-4 w-4" />
                         <span>Account</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/mypastes`}>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/pastes`}>
                         <FileTextIcon className="mr-3 h-4 w-4" />
                         <span>Pastes</span>
                       </DropdownMenuItem>
@@ -564,7 +564,7 @@ export const Navbar01 = React.forwardRef(
                         <HelpCircleIcon className="mr-3 h-4 w-4" />
                         <span>Help and Support</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/settings`}>
                         <SettingsIcon className="mr-3 h-4 w-4" />
                         <span>Settings</span>
                       </DropdownMenuItem>

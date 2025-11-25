@@ -18,6 +18,7 @@ import MyPastes from "../pages/Pastes/MyPastes.jsx"
 import Gallery from "../pages/Gallery/Gallery.jsx"
 import FeedPage from "../pages/Feed/FeedPage.jsx"
 import Dashboard from "../pages/Dashboard/Dashboard.jsx"
+import ProfilePage from "@/pages/Settings/Settings"
 
 function AppContent() {
   const location = useLocation()
@@ -39,7 +40,8 @@ function AppContent() {
         <Route path="/i/album/:slug" element={<ShareAlbum />} />
         <Route path="/auth/success" element={<AuthCallback />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/mypastes" element={<MyPastes />} />
+        <Route path="/pastes" element={<MyPastes />} />
+        <Route path="/settings" element={<ProfilePage />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
