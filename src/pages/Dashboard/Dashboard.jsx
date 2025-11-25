@@ -86,9 +86,14 @@ export default function Dashboard() {
     </div>
   );
 
-  const LeaderboardTable = ({ title, rows, type }) => {
+  const LeaderboardTable = ({ title, rows, type, sortBy = 'views' }) => {
+    // Sort rows by the specified field in descending order
+    const sorted = (rows && rows.length) 
+      ? [...rows].sort((a, b) => (Number(b[sortBy]) || 0) - (Number(a[sortBy]) || 0))
+      : [];
+    
     // show only top 5 and only two columns: slug and count
-    const displayed = (rows && rows.length) ? rows.slice(0, 5) : [];
+    const displayed = sorted.slice(0, 5);
     
     // Get display name based on type (albums use name, pastes/images use slug)
     const getDisplayName = (r) => {
@@ -99,7 +104,7 @@ export default function Dashboard() {
     // Get slug for navigation (all types use slug)
     const getSlugForNav = (r) => r.slug ?? r._id ?? '';
     
-    const getCount = (r) => r.views ?? r.bookmarks ?? r.bookmarkCount ?? 0;
+    const getCount = (r) => Number(r[sortBy] || r.views || r.bookmarks || r.bookmarkCount || 0);
 
     return (
       <div className="stat-card">
@@ -204,18 +209,18 @@ export default function Dashboard() {
           {topLists ? (
             <>
               <div className="leaderboard-row">
-                <LeaderboardTable title="Pastes by Views" rows={topLists.pastesByViews} type="paste" />
-                <LeaderboardTable title="Pastes by Bookmarks" rows={topLists.pastesByBookmarks} type="paste" />
+                <LeaderboardTable title="Pastes by Views" rows={topLists.pastesByViews} type="paste" sortBy="views" />
+                <LeaderboardTable title="Pastes by Bookmarks" rows={topLists.pastesByBookmarks} type="paste" sortBy="bookmarks" />
               </div>
 
               <div className="leaderboard-row">
-                <LeaderboardTable title="Images by Views" rows={topLists.imagesByViews} type="image" />
-                <LeaderboardTable title="Images by Bookmarks" rows={topLists.imagesByBookmarks} type="image" />
+                <LeaderboardTable title="Images by Views" rows={topLists.imagesByViews} type="image" sortBy="views" />
+                <LeaderboardTable title="Images by Bookmarks" rows={topLists.imagesByBookmarks} type="image" sortBy="bookmarks" />
               </div>
 
               <div className="leaderboard-row">
-                <LeaderboardTable title="Albums by Views" rows={topLists.albumsByViews} type="album" />
-                <LeaderboardTable title="Albums by Bookmarks" rows={topLists.albumsByBookmarks} type="album" />
+                <LeaderboardTable title="Albums by Views" rows={topLists.albumsByViews} type="album" sortBy="views" />
+                <LeaderboardTable title="Albums by Bookmarks" rows={topLists.albumsByBookmarks} type="album" sortBy="bookmarks" />
               </div>
             </>
           ) : (
