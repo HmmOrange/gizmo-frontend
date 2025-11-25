@@ -14,10 +14,7 @@ export default function SharePaste() {
     const [password, setPassword] = useState("");
     const [needsPassword, setNeedsPassword] = useState(false);
     const [error, setError] = useState("");
-
-    const [favourited, setFavourited] = useState(false);
-    const [favouriteCount, setFavouriteCount] = useState(0);
-
+    const [isBookmarked, setIsBookmarked] = useState(false);
     const token = localStorage.getItem("token");
 
     // Fetch paste data
@@ -44,24 +41,14 @@ export default function SharePaste() {
                 setPaste(json);
                 setNeedsPassword(false);
                 setError("");
-                setFavouriteCount(json.favouriteCount || 0);
-
-                // Check if user has favourited
-                if (token) {
-                    const favRes = await fetch(`${API_BASE}/${id}/favourite-status`, {
-                        headers: { "Authorization": "Bearer " + token },
-                    });
-                    const favJson = await favRes.json();
-                    console.log(favJson);
-                    setFavourited(favJson.isFavourite || false);
-                }
+                if (token) checkBookmark(id);
             }
         } catch (err) {
-            console.error(err);
-            setError("Failed to fetch paste.");
+            console.error('fetchPaste error', err);
+            setError('Failed to load paste');
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -72,30 +59,6 @@ export default function SharePaste() {
     const onSubmitPassword = (e) => {
         e.preventDefault();
         fetchPaste(password);
-    };
-
-    // Toggle favourite / unfavourite
-    const handleFavourite = async () => {
-        if (!token) return alert("You must be logged in to favourite.");
-
-        try {
-            const endpoint = favourited ? "unfavourite" : "favourite";
-            const res = await fetch(`${API_BASE}/${id}/${endpoint}`, {
-                method: "POST",
-                headers: { "Authorization": "Bearer " + token },
-            });
-            const json = await res.json();
-
-            if (res.ok) {
-                setFavourited(json.favourited);
-                setFavouriteCount(json.favouriteCount);
-            } else {
-                alert(json.error || "Failed to toggle favourite.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Failed to toggle favourite.");
-        }
     };
 
     // Export paste
@@ -128,6 +91,51 @@ export default function SharePaste() {
             else alert("Failed to summarize");
         } catch (err) {
             alert("Failed to summarize");
+        }
+    };
+
+    const checkBookmark = async (pasteId) => {
+        try {
+            const res = await fetch(
+                `${BACKEND_URL}/api/bookmarks/check?targetType=paste&targetId=${encodeURIComponent(pasteId)}`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            );
+            const data = await res.json();
+            setIsBookmarked(data.bookmarked);
+        } catch (err) {
+            console.error("Error checking bookmark:", err);
+        }
+    };
+
+    const handleBookmark = async () => {
+        if (!token) {
+            alert("Please login to bookmark");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/bookmarks/toggle`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    targetType: "paste",
+                    targetId: id
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to toggle bookmark");
+            const data = await res.json();
+            setIsBookmarked(data.bookmarked);
+        } catch (err) {
+            console.error("Error toggling bookmark:", err);
+            alert("Failed to bookmark");
         }
     };
 
@@ -185,25 +193,6 @@ export default function SharePaste() {
                         </div>
                     )}
 
-                    {/* Favourite button */}
-                    <div style={{ marginTop: "1em" }}>
-                        <button
-                            onClick={handleFavourite}
-                            style={{
-                                background: favourited ? "#ff4081" : "#888", // màu sáng nếu đã favourite
-                                color: "#fff",
-                                padding: "6px 12px",
-                                borderRadius: 4,
-                                border: "none",
-                                cursor: "pointer",
-                                marginRight: 10,
-                                transition: "all 0.2s",
-                            }}
-                        >
-                            {favourited ? "❤️ Favourited" : "🤍 Favourite"} ({favouriteCount})
-                        </button>
-                    </div>
-
                     {/* Other actions */}
                     <div style={{ marginTop: "1em" }}>
                         <button onClick={() => handleExport("raw")} style={{ marginRight: 10 }}>
@@ -212,7 +201,23 @@ export default function SharePaste() {
                         <button onClick={() => handleExport("png")} style={{ marginRight: 10 }}>
                             Export PNG
                         </button>
-                        <button onClick={() => handleExport("pdf")}>Export PDF</button>
+
+                        <button
+                            onClick={() => handleExport("pdf")}
+                        >
+                            Export PDF
+                        </button>
+                        <button
+                            onClick={handleBookmark}
+                            style={{
+                                marginLeft: 10,
+                                marginRight: 10,
+                                background: isBookmarked ? "#ff6b6b" : "#4caf50",
+                                color: "#fff"
+                            }}
+                        >
+                            {isBookmarked ? "❤ Bookmarked" : "🤍 Bookmark"}
+                        </button>
                     </div>
 
                     <button
@@ -248,3 +253,4 @@ export default function SharePaste() {
         </div>
     );
 }
+

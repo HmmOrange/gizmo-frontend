@@ -27,67 +27,98 @@ const CreateImage = ({ onClose }) => {
 
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [ocrText, setOcrText] = useState("");
 
   const MAX_WIDTH = 900;
   const MAX_HEIGHT = 700;
 
   const FRONTEND_URL = window.location.origin;
 
+  // initialize canvas context when canvas element mounts or selectedIdx changes
   useEffect(() => {
-    if (!canvasRef.current || selectedIdx === null) return;
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctxRef.current = ctx;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-  }, [selectedIdx]);
 
-  // Draw uploaded image onto canvas when selectedIdx or images changes
+    // ensure strokeStyle/lineWidth reflect current image if any
+    if (selectedIdx !== null && images[selectedIdx]) {
+      const img = images[selectedIdx];
+      ctx.strokeStyle = img.tool === "eraser" ? "#ffffff" : img.color;
+      ctx.lineWidth = img.size;
+    }
+  }, [selectedIdx, images]);
+
+  // Draw or restore image onto canvas when selectedIdx changes
   useEffect(() => {
     if (!canvasRef.current || selectedIdx === null) return;
     const imgData = images[selectedIdx];
-    if (!imgData || !imgData.preview) return;
-    // Only draw if this is the first time (no history yet)
-    if (imgData.canvasState.length > 0) return;
+    if (!imgData) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+    ctxRef.current = ctx;
+
+    // If no history saved yet, draw the original preview as initial state
+    if (!imgData.canvasState || imgData.canvasState.length === 0) {
+      const image = new window.Image();
+      image.onload = () => {
+        // Resize canvas to fit image, but constrain to MAX_WIDTH/HEIGHT
+        let w = image.width;
+        let h = image.height;
+        const aspect = w / h;
+        if (w > MAX_WIDTH) {
+          w = MAX_WIDTH;
+          h = Math.round(w / aspect);
+        }
+        if (h > MAX_HEIGHT) {
+          h = MAX_HEIGHT;
+          w = Math.round(h * aspect);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(image, 0, 0, w, h);
+        // Save initial state (use functional update to avoid mutation)
+        const dataURL = canvas.toDataURL();
+        setImages(prev => {
+          const updated = prev.map((it, idx) => idx === selectedIdx ? { ...it, canvasState: [dataURL], historyStep: 0 } : it);
+          return updated;
+        });
+
+        // restore tool settings
+        ctx.strokeStyle = imgData.tool === "eraser" ? "#ffffff" : imgData.color;
+        ctx.lineWidth = imgData.size;
+      };
+      image.src = imgData.preview;
+      return;
+    }
+
+    // otherwise restore from saved history[historyStep]
+    const snapshot = imgData.canvasState[imgData.historyStep];
+    if (!snapshot) return;
     const image = new window.Image();
     image.onload = () => {
-      // Resize canvas to fit image, but constrain to MAX_WIDTH/HEIGHT
-      let w = image.width;
-      let h = image.height;
-      const aspect = w / h;
-      if (w > MAX_WIDTH) {
-        w = MAX_WIDTH;
-        h = Math.round(w / aspect);
-      }
-      if (h > MAX_HEIGHT) {
-        h = MAX_HEIGHT;
-        w = Math.round(h * aspect);
-      }
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = image.width;
+      canvas.height = image.height;
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(image, 0, 0, w, h);
-      // Save initial state
-      const dataURL = canvas.toDataURL();
-      setImages(prev => {
-        const updated = [...prev];
-        updated[selectedIdx] = {
-          ...updated[selectedIdx],
-          canvasState: [dataURL],
-          historyStep: 0,
-        };
-        return updated;
-      });
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0);
+
+      // restore tool settings for this image
+      ctx.strokeStyle = imgData.tool === "eraser" ? "#ffffff" : imgData.color;
+      ctx.lineWidth = imgData.size;
     };
-    image.src = imgData.preview;
+    image.src = snapshot;
     // eslint-disable-next-line
   }, [selectedIdx, images]);
 
+  // ensure ctx settings update when image props change
   useEffect(() => {
-    if (ctxRef.current && selectedIdx !== null) {
+    if (ctxRef.current && selectedIdx !== null && images[selectedIdx]) {
       const img = images[selectedIdx];
       ctxRef.current.strokeStyle = img.tool === "eraser" ? "#ffffff" : img.color;
       ctxRef.current.lineWidth = img.size;
@@ -99,15 +130,15 @@ const CreateImage = ({ onClose }) => {
     const dataURL = canvasRef.current.toDataURL();
 
     setImages(prev => {
-      const updated = [...prev];
-      const img = updated[selectedIdx];
-      const newHistory = img.canvasState.slice(0, img.historyStep + 1);
-      newHistory.push(dataURL);
-      if (newHistory.length > 50) newHistory.shift();
-
-      img.canvasState = newHistory;
-      img.historyStep = newHistory.length - 1;
-      return updated;
+      return prev.map((it, idx) => {
+        if (idx !== selectedIdx) return it;
+        const canvasState = Array.isArray(it.canvasState) ? [...it.canvasState] : [];
+        const historyStep = typeof it.historyStep === 'number' && it.historyStep >= 0 ? it.historyStep : canvasState.length - 1;
+        const newHistory = canvasState.slice(0, historyStep + 1);
+        newHistory.push(dataURL);
+        if (newHistory.length > 50) newHistory.shift();
+        return { ...it, canvasState: newHistory, historyStep: newHistory.length - 1 };
+      });
     });
   }, [selectedIdx]);
 
@@ -130,7 +161,7 @@ const CreateImage = ({ onClose }) => {
       setToken(savedToken);
       try {
         const payload = JSON.parse(atob(savedToken.split('.')[1]));
-        console.log("JWT payload:", payload); 
+        console.log("JWT payload:", payload);
         setUserId(payload.user_id || null);
       } catch (err) {
         setUserId(null);
@@ -150,7 +181,6 @@ const CreateImage = ({ onClose }) => {
     };
   };
 
-  // slug-checking removed: no backend validation for slugs
   const checkImageSlug = debounce(async (slug) => {
     const s = (slug || "").trim();
     if (!s) {
@@ -181,23 +211,24 @@ const CreateImage = ({ onClose }) => {
 
   const undo = () => {
     if (selectedIdx === null) return;
-    const img = images[selectedIdx];
-    if (img.historyStep <= 0) return;
     setImages(prev => {
-      const updated = [...prev];
-      updated[selectedIdx].historyStep -= 1;
-      return updated;
+      return prev.map((it, idx) => {
+        if (idx !== selectedIdx) return it;
+        const step = Math.max(0, (it.historyStep || 0) - 1);
+        return { ...it, historyStep: step };
+      });
     });
   };
 
   const redo = () => {
     if (selectedIdx === null) return;
-    const img = images[selectedIdx];
-    if (img.historyStep >= img.canvasState.length - 1) return;
     setImages(prev => {
-      const updated = [...prev];
-      updated[selectedIdx].historyStep += 1;
-      return updated;
+      return prev.map((it, idx) => {
+        if (idx !== selectedIdx) return it;
+        const max = (it.canvasState || []).length - 1;
+        const step = Math.min(max, (it.historyStep || 0) + 1);
+        return { ...it, historyStep: step };
+      });
     });
   };
 
@@ -211,6 +242,7 @@ const CreateImage = ({ onClose }) => {
       slugEdited: false,
       exposure: "public",
       password: "",
+      caption: "",
       canvasState: [],
       historyStep: -1,
       tool: "pen",
@@ -220,6 +252,8 @@ const CreateImage = ({ onClose }) => {
 
     setImages(prev => [...prev, ...newImages]);
     if (selectedIdx === null && newImages.length > 0) {
+      setSelectedIdx(prev => prev === null ? prev : 0);
+      // ensure at least one selected if none
       setSelectedIdx(0);
     }
   };
@@ -231,28 +265,23 @@ const CreateImage = ({ onClose }) => {
 
   const removeImage = (idx) => {
     setImages(prev => prev.filter((_, i) => i !== idx));
-    if (selectedIdx === idx) {
-      setSelectedIdx(images.length <= 1 ? null : 0);
-    } else if (selectedIdx > idx) {
-      setSelectedIdx(selectedIdx - 1);
-    }
+    setSelectedIdx(prev => {
+      if (prev === idx) return prev <= 0 ? null : 0;
+      if (prev > idx) return prev - 1;
+      return prev;
+    });
   };
 
   const updateImageProp = (prop, value) => {
     if (selectedIdx === null) return;
-    setImages(prev => {
-      const updated = [...prev];
-      updated[selectedIdx][prop] = value;
-      if (prop === "slug") updated[selectedIdx].slugEdited = true;
-      return updated;
-    });
+    setImages(prev => prev.map((it, idx) => idx === selectedIdx ? { ...it, [prop]: value, ...(prop === 'slug' ? { slugEdited: true } : {}) } : it));
     if (prop === "slug") {
       checkImageSlug(value);
     }
   };
 
   const start = (e) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || selectedIdx === null) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
     const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
@@ -262,6 +291,7 @@ const CreateImage = ({ onClose }) => {
     ctxRef.current.beginPath();
     ctxRef.current.moveTo(x * scaleX, y * scaleY);
     isDrawing.current = true;
+    // Save current state before drawing
     saveState();
   };
 
@@ -287,6 +317,34 @@ const CreateImage = ({ onClose }) => {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     saveState();
+  };
+
+  const handleOCR = async () => {
+    if (!currentImage) return;
+
+    const blob = await fetch(currentImage.preview).then(r => r.blob());
+    const file = new File([blob], "image.png", { type: "image/png" });
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await axios.post(`${BACKEND_URL}/api/ocr`, formData);
+
+      const text = (res.data.text || "").trim();
+
+      if (!text) {
+        alert("Cannot detect any text");
+        setOcrText("");
+        return;
+      }
+
+      setOcrText(text);
+
+    } catch (e) {
+      console.error(e);
+      alert("OCR failed.");
+    }
   };
 
   const handleCreateAlbum = async () => {
@@ -328,7 +386,6 @@ const CreateImage = ({ onClose }) => {
         return `${base}-${counts[base] - 1}`;
       });
 
-      // No server-side slug checking: use unique slugs within the batch
       const finalSlugs = batchUnique;
 
       // Bulk-check final slugs against server to avoid conflicts
@@ -342,7 +399,6 @@ const CreateImage = ({ onClose }) => {
           return;
         }
       } catch (err) {
-        // If bulk check fails, stop to avoid accidental overwrites
         console.error("Slug bulk-check failed:", err);
         alert("Failed to validate image slugs. Please try again later.");
         setIsUploading(false);
@@ -351,18 +407,42 @@ const CreateImage = ({ onClose }) => {
 
       const uploadedImages = [];
 
+      // Upload each image using an offscreen canvas (do NOT setSelectedIdx inside this loop)
       for (let i = 0; i < images.length; i++) {
         const imgData = images[i];
 
-        if (selectedIdx === i) saveState();
-        else {
-          setSelectedIdx(i);
-          await new Promise(resolve => setTimeout(resolve, 50));
-          saveState();
+        // Ensure there is a saved snapshot for this image
+        const snapshot = (imgData.canvasState && imgData.canvasState.length > 0) ? imgData.canvasState[imgData.historyStep] : null;
+        if (!snapshot) {
+          alert(`Missing canvas data for image ${i}. Please ensure you selected and saved the image.`);
+          setIsUploading(false);
+          return;
         }
 
-        const canvas = canvasRef.current;
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 0.95));
+        // Create an offscreen canvas and draw the snapshot into it
+        const offscreen = document.createElement("canvas");
+        const offCtx = offscreen.getContext("2d");
+
+        const tempImg = await new Promise((resolve) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.onerror = () => resolve(null);
+          im.src = snapshot;
+        });
+
+        if (!tempImg) {
+          alert(`Failed to load image snapshot for image ${i}`);
+          setIsUploading(false);
+          return;
+        }
+
+        offscreen.width = tempImg.width;
+        offscreen.height = tempImg.height;
+        offCtx.fillStyle = "#ffffff";
+        offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
+        offCtx.drawImage(tempImg, 0, 0);
+
+        const blob = await new Promise(resolve => offscreen.toBlob(resolve, "image/png", 0.95));
 
         const finalSlug = finalSlugs[i];
 
@@ -371,16 +451,16 @@ const CreateImage = ({ onClose }) => {
         formData.append("slug", finalSlug);
         formData.append("albumId", albumId);
         formData.append("albumTitle", finalAlbumTitle);
-        // include album exposure when creating/selecting album
         if (addToAlbum) formData.append("albumExposure", albumExposure);
-        // include image exposure and password when set
         const exposureToUse = addToAlbum ? albumExposure : (imgData.exposure || "public");
         formData.append("exposure", exposureToUse);
         if (!addToAlbum && imgData.exposure === "password_protected") {
           formData.append("password", imgData.password || "");
         }
-        // indicate whether this slug was explicitly edited by the user
         formData.append("isCustomSlug", imgData.slugEdited ? "true" : "false");
+        if (imgData.caption && imgData.caption.trim() !== "") {
+          formData.append("caption", imgData.caption.trim());
+        }
 
         let res;
         try {
@@ -390,14 +470,13 @@ const CreateImage = ({ onClose }) => {
             {
               headers: {
                 "Content-Type": "multipart/form-data",
-                // Thêm Authorization nếu có token
                 ...(token ? { Authorization: "Bearer " + token } : {})
               }
             }
           );
         } catch (err) {
           if (err.response?.status === 409) {
-            alert(`Upload failed: slug \"${finalSlug}\" is already taken. Please change the slug and try again.`);
+            alert(`Upload failed: slug "${finalSlug}" is already taken. Please change the slug and try again.`);
             setIsUploading(false);
             return;
           }
@@ -405,19 +484,19 @@ const CreateImage = ({ onClose }) => {
         }
 
         uploadedImages.push(res.data.imageUrl);
-        // build share link cho image sử dụng FRONTEND_URL
         const imgSlug = res.data?.image?.slug || finalSlugs[i];
         const link = `${FRONTEND_URL}/share/image/${imgSlug}`;
         uploadedImages[uploadedImages.length - 1] = { url: res.data.imageUrl, link, slug: imgSlug };
       }
 
-      // Show per-image share links (do not show album link when adding into album)
       const links = uploadedImages.map(i => i.link || i);
       setShareLinks(links);
       if (addToAlbum) {
-        alert(`Images uploaded into album \n${images.length} images uploaded!`);
+        alert(`Images uploaded into album 
+${images.length} images uploaded!`);
       } else {
-        alert(`Images uploaded\n${images.length} images uploaded!`);
+        alert(`Images uploaded
+${images.length} images uploaded!`);
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -431,7 +510,6 @@ const CreateImage = ({ onClose }) => {
 
   // Filter albums for chooser: only show public, or private/unlisted if user is author
   const allowedAlbums = albumsList.filter(a => {
-    // Only show public albums if not logged in
     if (!token) return a.exposure === "public";
     if (a.exposure === "public") return true;
     if ((a.exposure === "private" || a.exposure === "unlisted") && userId && a.authorId === userId) return true;
@@ -467,7 +545,6 @@ const CreateImage = ({ onClose }) => {
                       setAvailableAlbumSlug(null);
                       return;
                     }
-                    // Only allow selection if album is allowed
                     const sel = allowedAlbums.find(a => a.slug === v);
                     if (sel) {
                       setAlbumSlug(sel.slug);
@@ -486,7 +563,6 @@ const CreateImage = ({ onClose }) => {
                     <div style={{ marginTop: 8, padding: 8, background: "#fafafa", borderRadius: 8 }}>
                       <div style={{ fontWeight: "bold" }}>{albumTitle}</div>
                       <div style={{ color: "#666", fontSize: 13 }}>Visibility: {albumExposure}</div>
-                      {/* Nút Link to album */}
                       <div style={{ marginTop: 8 }}>
                         <a
                           href={`${window.location.origin}/share/album/${encodeURIComponent(albumSlug)}`}
@@ -524,7 +600,6 @@ const CreateImage = ({ onClose }) => {
                     <label style={{ fontWeight: "bold", display: "block", marginBottom: 6 }}>Album access</label>
                     <select value={albumExposure} onChange={e => setAlbumExposure(e.target.value)} style={{ width: "100%", padding: 10 }}>
                       <option value="public">Public</option>
-                      {/* Only show unlisted/private if logged in */}
                       {token && <option value="unlisted">Unlisted</option>}
                       {token && <option value="private">Private</option>}
                     </select>
@@ -604,30 +679,40 @@ const CreateImage = ({ onClose }) => {
               <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
               {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
               <div style={{ marginTop: 8 }}>
-                {/* Nếu addToAlbum, chỉ hiển thị thông báo, không cho chọn exposure/password */}
-                {addToAlbum ? (
-                  <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>Image access will follow album access.</div>
-                ) : (
-                  <>
-                    <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
-                    <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }}>
-                      <option value="public">Public</option>
-                      {/* Only show unlisted/private if logged in */}
-                      {token && <option value="unlisted">Unlisted</option>}
-                      {token && <option value="private">Private</option>}
-                      <option value="password_protected">Password protected</option>
-                    </select>
-                    {currentImage.exposure === "password_protected" && (
-                      <input
-                        type="text"
-                        placeholder="Password to view this image"
-                        value={currentImage.password || ""}
-                        onChange={e => updateImageProp("password", e.target.value)}
-                        style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
-                      />
-                    )}
-                  </>
-                )}
+                <div style={{ marginTop: 8 }}>
+                  <label style={{ fontWeight: "bold", display: "block", marginBottom: 4 }}>Caption (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Enter caption for this image"
+                    value={currentImage.caption || ""}
+                    onChange={e => updateImageProp("caption", e.target.value)}
+                    style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #ddd", marginBottom: 8 }}
+                  />
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  {addToAlbum ? (
+                    <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>Image access will follow album access.</div>
+                  ) : (
+                    <>
+                      <label style={{ fontWeight: "bold", display: "block", marginTop: 8 }}>Image access</label>
+                      <select value={currentImage.exposure} onChange={e => updateImageProp("exposure", e.target.value)} style={{ width: "100%", padding: 10, marginTop: 6 }}>
+                        <option value="public">Public</option>
+                        {token && <option value="unlisted">Unlisted</option>}
+                        {token && <option value="private">Private</option>}
+                        <option value="password_protected">Password protected</option>
+                      </select>
+                      {currentImage.exposure === "password_protected" && (
+                        <input
+                          type="text"
+                          placeholder="Password to view this image"
+                          value={currentImage.password || ""}
+                          onChange={e => updateImageProp("password", e.target.value)}
+                          style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -641,7 +726,44 @@ const CreateImage = ({ onClose }) => {
             <button onClick={undo} disabled={!currentImage || currentImage.historyStep <= 0}>Undo</button>
             <button onClick={redo} disabled={!currentImage || currentImage.historyStep >= currentImage.canvasState.length - 1}>Redo</button>
             <button onClick={clearCanvas} style={{ background: "#e74c3c", color: "white" }}>Clear</button>
+            <button onClick={handleOCR} style={{ background: "#8e44ad", color: "white" }}>OCR</button>
           </div>
+
+          <div style={{ textAlign: "center", background: "#fafafa", borderRadius: 12, padding: 40, minHeight: 40 }}>
+            {ocrText && (
+              <div style={{
+                background: "#fdf6e3",
+                border: "1px solid #e1c97a",
+                padding: "12px 16px",
+                borderRadius: 8,
+                marginBottom: 20,
+                textAlign: "left",
+                whiteSpace: "pre-wrap",
+                position: "relative"
+              }}>
+                <strong>OCR Text:</strong>
+                <div style={{ marginTop: 6 }}>{ocrText}</div>
+
+                <button
+                  onClick={() => navigator.clipboard.writeText(ocrText)}
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    padding: "4px 10px",
+                    background: "#3498db",
+                    color: "white",
+                    borderRadius: 6,
+                    fontSize: 12
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            )}
+
+          </div>
+
 
           <div style={{ textAlign: "center", background: "#fafafa", borderRadius: 12, padding: 40, minHeight: 600 }}>
             {selectedIdx === null ? (
