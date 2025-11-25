@@ -12,15 +12,31 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState(null);
   const [bookmarks, setBookmarks] = useState(null);
+  const [topLists, setTopLists] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchStats();
+    fetchTopLists();
     if (token) {
       fetchBookmarks();
     }
   }, []);
+
+  const fetchTopLists = async () => {
+    try {
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      // request only top 5 from backend
+      const res = await fetch(`${BACKEND_URL}/api/dashboard/top?limit=5`, { headers });
+      if (!res.ok) throw new Error('Failed to fetch top lists');
+      const data = await res.json();
+      setTopLists(data);
+    } catch (err) {
+      console.error('Error fetching top lists:', err);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -69,6 +85,51 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
+  const LeaderboardTable = ({ title, rows, type }) => {
+    // show only top 5 and only two columns: slug and count
+    const displayed = (rows && rows.length) ? rows.slice(0, 5) : [];
+    
+    // Get display name based on type (albums use name, pastes/images use slug)
+    const getDisplayName = (r) => {
+      if (type === 'album') return r.name ?? r.slug ?? r._id ?? '';
+      return r.slug ?? r._id ?? r.title ?? r.name ?? '';
+    };
+    
+    // Get slug for navigation (all types use slug)
+    const getSlugForNav = (r) => r.slug ?? r._id ?? '';
+    
+    const getCount = (r) => r.views ?? r.bookmarks ?? r.bookmarkCount ?? 0;
+
+    return (
+      <div className="stat-card">
+        <h3>{title}</h3>
+        <div style={{ marginTop: 8 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
+                <th style={{ padding: '6px 8px' }}>Slug</th>
+                <th style={{ padding: '6px 8px' }}>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayed.length ? displayed.map((r, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #fafafa', cursor: 'pointer' }} onClick={() => {
+                  const slug = getSlugForNav(r);
+                  if (type === 'paste') navigate(`/share/${slug}`);
+                  if (type === 'image') navigate(`/share/image/${slug}`);
+                  if (type === 'album') navigate(`/share/album/${slug}`);
+                }}>
+                  <td style={{ padding: '8px' }}>{getDisplayName(r)}</td>
+                  <td style={{ padding: '8px' }}>{getCount(r)}</td>
+                </tr>
+              )) : <tr><td colSpan={2} style={{ padding: 8 }}>No data</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const BookmarkItem = ({ item, type }) => {
     const handleClick = () => {
@@ -132,6 +193,33 @@ export default function Dashboard() {
                 </div>
               </div>
             </>
+          )}
+        </div>
+      </section>
+
+      {/* Leaderboards Section */}
+      <section className="stats-section">
+        <h2>Leaderboards</h2>
+        <div className="stats-grid">
+          {topLists ? (
+            <>
+              <div className="leaderboard-row">
+                <LeaderboardTable title="Pastes by Views" rows={topLists.pastesByViews} type="paste" />
+                <LeaderboardTable title="Pastes by Bookmarks" rows={topLists.pastesByBookmarks} type="paste" />
+              </div>
+
+              <div className="leaderboard-row">
+                <LeaderboardTable title="Images by Views" rows={topLists.imagesByViews} type="image" />
+                <LeaderboardTable title="Images by Bookmarks" rows={topLists.imagesByBookmarks} type="image" />
+              </div>
+
+              <div className="leaderboard-row">
+                <LeaderboardTable title="Albums by Views" rows={topLists.albumsByViews} type="album" />
+                <LeaderboardTable title="Albums by Bookmarks" rows={topLists.albumsByBookmarks} type="album" />
+              </div>
+            </>
+          ) : (
+            <div className="loading">Loading leaderboards...</div>
           )}
         </div>
       </section>

@@ -108,6 +108,10 @@ export default function ShareImage() {
             />
             <p style={{ marginTop: 12, color: "#666" }}>{image.caption}</p>
             <p style={{ marginTop: 6, color: "#666" }}>Link: {window.location.href}</p>
+            <div style={{ marginTop: 8, color: '#666' }}>
+              <span style={{ marginRight: 12 }}>Views: {image.views ?? 0}</span>
+              <span>Last modified: {new Date(image.updatedAt || image.updated_at || image.createdAt).toLocaleString()}</span>
+            </div>
             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center' }}>
               <button
                 onClick={async () => {

@@ -169,6 +169,12 @@ export default function SharePaste() {
                         {paste.title || "Untitled Paste"}
                     </h2>
 
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: '#bbb', marginBottom: 8 }}>
+                        <div>Views: {paste.views ?? 0}</div>
+                        <div>|</div>
+                        <div>Last modified: {new Date(paste.updatedAt || paste.updated_at || paste.createdAt).toLocaleString()}</div>
+                    </div>
+
                     <pre style={{
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
