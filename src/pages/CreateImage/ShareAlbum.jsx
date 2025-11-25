@@ -67,6 +67,11 @@ export default function ShareAlbum() {
             <div>
               <h1 style={{ marginBottom: 6 }}>{album.name}</h1>
               <div style={{ color: "#666", marginBottom: 12 }}>{album.description}</div>
+              <div style={{ display: 'flex', gap: 12, color: '#666', marginBottom: 12 }}>
+                <div>Views: {(album.images || []).reduce((s, it) => s + (it.views || 0), 0)}</div>
+                <div>|</div>
+                <div>Last modified: {new Date(album.updatedAt || album.updated_at || album.createdAt).toLocaleString()}</div>
+              </div>
               <div style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div><strong>Visibility:</strong> {album.exposure}</div>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>

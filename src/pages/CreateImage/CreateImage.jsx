@@ -576,7 +576,7 @@ ${images.length} images uploaded!`);
                       </div>
                     </div>
                   ) : (
-                    <div style={{ marginTop: 8, color: "#666", fontSize: 13 }}>No album selected — pick an existing album or toggle to create a new one.</div>
+                    <div style={{ marginTop: 8, color: "#666", fontSize: 13 }}>No album selected.</div>
                   )}
                 </div>
               ) : (
@@ -618,7 +618,7 @@ ${images.length} images uploaded!`);
               )}
             </>
           ) : (
-            <div style={{ marginBottom: 16, color: "#666", fontSize: 14 }}>Images will be uploaded into the global <strong>images</strong> album by default.</div>
+            <div style={{ marginBottom: 16, color: "#666", fontSize: 14 }}></div>
           )}
 
           <label style={{ display: "block", background: "#3498db", color: "white", padding: 14, borderRadius: 8, textAlign: "center", cursor: "pointer", fontWeight: "bold" }}>
@@ -676,7 +676,7 @@ ${images.length} images uploaded!`);
                 onChange={e => { updateImageProp("slug", e.target.value); }}
                 style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
               />
-              <small>Link: gizmo.app/i/{currentImage.slug || "..."}</small>
+              <small>Link: {FRONTEND_URL}/share/image/{currentImage.slug || "..."}</small>
               {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
               <div style={{ marginTop: 8 }}>
                 <div style={{ marginTop: 8 }}>

@@ -43,6 +43,25 @@
   margin-bottom: 2rem;
 }
 
+/* Leaderboard rows: each type (pastes/images/albums) takes a full row
+   with two leaderboard cards side-by-side. */
+.leaderboard-row {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  /* ensure this row spans the full grid so each type sits on its own line */
+  grid-column: 1 / -1;
+}
+.leaderboard-row .stat-card {
+  flex: 1 1 0;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-row {
+    flex-direction: column;
+  }
+}
+
 .stat-card {
   background: white;
   border-radius: 12px;

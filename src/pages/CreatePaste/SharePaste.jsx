@@ -168,8 +168,24 @@ export default function SharePaste() {
             {!loading && paste && (
                 <>
                     <h2 style={{ color: "#97c5f7" }}>{paste.title || "Untitled Paste"}</h2>
-                    <div style={{ background: "#151515", padding: "1em", borderRadius: 4, lineHeight: 1.5 }}
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(paste.content || "")) }}
+
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: '#bbb', marginBottom: 8 }}>
+                        <div>Views: {paste.views ?? 0}</div>
+                        <div>|</div>
+                        <div>Last modified: {new Date(paste.updatedAt || paste.updated_at || paste.createdAt).toLocaleString()}</div>
+                    </div>
+
+                    {/* Markdown content */}
+                    <div
+                        style={{
+                            background: "#151515",
+                            padding: "1em",
+                            borderRadius: "4px",
+                            lineHeight: "1.5",
+                        }}
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(marked.parse(paste.content || "")),
+                        }}
                     />
                     {paste.date_of_expiry && <div style={{ fontSize: "0.8em", color: "#d66" }}>Expires: {new Date(paste.date_of_expiry).toLocaleString()}</div>}
 
