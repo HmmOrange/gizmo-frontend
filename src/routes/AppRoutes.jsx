@@ -30,12 +30,12 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/share/:id" element={<SharePaste />} />
+        <Route path="/i/:id" element={<SharePaste />} />
         <Route path="/create/paste" element={<CreatePaste />} />
         <Route path="/edit/:id" element={<EditPaste />} />
         <Route path="/create/image" element={<CreateImage />} />
-        <Route path="/share/image/:slug" element={<ShareImage />} />
-        <Route path="/share/album/:slug" element={<ShareAlbum />} />
+        <Route path="/i/image/:slug" element={<ShareImage />} />
+        <Route path="/i/album/:slug" element={<ShareAlbum />} />
         <Route path="/auth/success" element={<AuthCallback />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/mypastes" element={<MyPastes />} />
