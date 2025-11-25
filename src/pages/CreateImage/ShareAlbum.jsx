@@ -1,150 +1,184 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import axios from "axios";
-import NavBar from "../../components/NavBar/NavBar";
+"use client"
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+import { useParams, Link, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import axios from "axios"
+import NavBar from "../../components/NavBar/NavBar"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Eye, Heart, Pencil, Clock } from "lucide-react"
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 
 export default function ShareAlbum() {
-  const { slug } = useParams();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [album, setAlbum] = useState(null);
-  const [albumBookmarked, setAlbumBookmarked] = useState(false);
-  const [albumBookmarkCount, setAlbumBookmarkCount] = useState(0);
-  const [error, setError] = useState(null);
-  const [token, setToken] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const { slug } = useParams()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [album, setAlbum] = useState(null)
+  const [albumBookmarked, setAlbumBookmarked] = useState(false)
+  const [albumBookmarkCount, setAlbumBookmarkCount] = useState(0)
+  const [error, setError] = useState(null)
+  const [token, setToken] = useState(null)
+  const [userId, setUserId] = useState(null)
 
   useEffect(() => {
-    // Lấy token từ localStorage khi mount
-    const savedToken = localStorage.getItem("token");
-    const savedUserId = localStorage.getItem("userId");
-    if (savedToken) setToken(savedToken);
-    if (savedUserId) setUserId(savedUserId);
-  }, []);
+    const savedToken = localStorage.getItem("token")
+    const savedUserId = localStorage.getItem("userId")
+    if (savedToken) setToken(savedToken)
+    if (savedUserId) setUserId(savedUserId)
+  }, [])
 
   useEffect(() => {
     const fetchAlbum = async () => {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
       try {
-        const url = `${BACKEND_URL.replace(/\/$/, "")}/share/album/${encodeURIComponent(slug)}`;
+        const url = `${BACKEND_URL.replace(/\/$/, "")}/share/album/${encodeURIComponent(slug)}`
         const res = await axios.get(url, {
           headers: token ? { Authorization: "Bearer " + token } : {},
-        });
-        const alb = res.data.album || null;
-        setAlbum(alb);
-        setAlbumBookmarkCount(alb?.bookmarkCount || 0);
-        // check whether current user bookmarked this album
+        })
+        const alb = res.data.album || null
+        setAlbum(alb)
+        setAlbumBookmarkCount(alb?.bookmarkCount || 0)
         try {
-          const tokenLocal = localStorage.getItem('token');
+          const tokenLocal = localStorage.getItem("token")
           if (tokenLocal && alb?._id) {
-            const chk = await axios.get(`${BACKEND_URL.replace(/\/$/, '')}/api/bookmarks/check`, { params: { targetType: 'album', targetId: alb._id }, headers: { Authorization: 'Bearer ' + tokenLocal } });
-            setAlbumBookmarked(!!chk.data?.bookmarked);
+            const chk = await axios.get(`${BACKEND_URL.replace(/\/$/, "")}/api/bookmarks/check`, {
+              params: { targetType: "album", targetId: alb._id },
+              headers: { Authorization: "Bearer " + tokenLocal },
+            })
+            setAlbumBookmarked(!!chk.data?.bookmarked)
           } else {
-            setAlbumBookmarked(false);
+            setAlbumBookmarked(false)
           }
         } catch (e) {
-          // ignore
-          setAlbumBookmarked(false);
+          setAlbumBookmarked(false)
         }
       } catch (err) {
-        const msg = err.response?.data?.message || err.message;
-        setError(msg);
+        const msg = err.response?.data?.message || err.message
+        setError(msg)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchAlbum();
-  }, [slug, token]);
+    }
+    fetchAlbum()
+  }, [slug, token])
 
-  const isAuthor = album && userId && String(album.authorId) === String(userId);
-  window.console.log(album);
+  const isAuthor = album && userId && String(album.authorId) === String(userId)
 
   return (
     <>
-      <NavBar></NavBar>
-    
-      <div style={{ minHeight: "100vh", background: "#f6f8fa", padding: 40, fontFamily: "system-ui, sans-serif" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          {loading && <p>Loading album...</p>}
-          {!loading && error && !album && <div style={{ color: "#e74c3c" }}>Error: {String(error)}</div>}
+      <NavBar />
+      <div className="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          {loading && <p className="text-center text-muted-foreground">Loading album...</p>}
+
+          {!loading && error && !album && <div className="text-destructive text-center">Error: {String(error)}</div>}
+
           {!loading && album && (
-            <div>
-              <h1 style={{ marginBottom: 6 }}>{album.name}</h1>
-              <div style={{ color: "#666", marginBottom: 12 }}>{album.description}</div>
-              <div style={{ display: 'flex', gap: 12, color: '#666', marginBottom: 12 }}>
-                {/* Tính tổng view */}
-                <div>
-                  Views: {(album.images || []).reduce((sum, img) => sum + (img.view || img.views || 0), 0)}
-                </div>
-
-                <div>|</div>
-
-                {/* Tính last modified = createdAt mới nhất trong danh sách ảnh */}
-                <div>
-                  Last modified: {
-                    (() => {
-                      const imgs = album.images || [];
-                      if (!imgs.length) return "N/A";
-                      const last = imgs.reduce((latest, img) => {
-                        const time = new Date(img.createdAt);
-                        return time > latest ? time : latest;
-                      }, new Date(0));
-                      return last.toLocaleString();
-                    })()
-                  }
-                </div>
-
-              </div>
-              <div style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                <div><strong>Visibility:</strong> {album.exposure}</div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const tokenLocal = localStorage.getItem('token');
-                        const res = await axios.post(`${BACKEND_URL.replace(/\/$/, '')}/api/bookmarks/toggle`, { targetType: 'album', targetId: album._id }, { headers: tokenLocal ? { Authorization: 'Bearer ' + tokenLocal } : {} });
-                        setAlbumBookmarked(res.data.bookmarked);
-                        setAlbumBookmarkCount(res.data.count || 0);
-                      } catch (err) {
-                        if (err.response?.status === 401) return alert('Please sign in to favourite');
-                        console.error(err);
-                        alert('Failed to toggle favourite');
-                      }
-                    }}
-                    style={{ padding: '8px 12px', background: albumBookmarked ? '#ffb6c1' : '#f0f0f0', border: 'none', borderRadius: 8, cursor: 'pointer' }}
-                  >
-                    {albumBookmarked ? 'Favourited' : 'Favourite'}
-                  </button>
-                  <div style={{ color: '#666', display: 'none' }}>{albumBookmarkCount} favourite{albumBookmarkCount !== 1 ? 's' : ''}</div>
-                  {isAuthor && (
-                    <button
-                      onClick={() => navigate(`/edit/album/${album._id}`)}
-                      style={{ padding: '8px 12px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginLeft: 12 }}
-                    >
-                      Edit
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
-                {(album.images || []).map(img => (
-                  <div key={img._id} style={{ background: "white", borderRadius: 8, padding: 8, textAlign: "center" }}>
-                    <Link to={`/i/image/${img.slug}`}>
-                      <img src={img.imageUrl} alt={img.caption || ""} style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 6 }} />
-                    </Link>
-                    <div style={{ marginTop: 8, color: "#444" }}>{img.caption || img.slug}</div>
-                    <div style={{ marginTop: 6, color: '#666' }}>{img.bookmarkCount || 0} favourite{(img.bookmarkCount || 0) !== 1 ? 's' : ''}</div>
+            <Card>
+              <CardHeader className="space-y-2">
+                <h1 className="text-2xl font-bold text-foreground">{album.name}</h1>
+                {album.description && <p className="text-muted-foreground">{album.description}</p>}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="h-4 w-4" />
+                    <span>{(album.images || []).reduce((sum, img) => sum + (img.view || img.views || 0), 0)}</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <span className="text-border">|</span>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {(() => {
+                        const imgs = album.images || []
+                        if (!imgs.length) return "N/A"
+                        const last = imgs.reduce((latest, img) => {
+                          const time = new Date(img.createdAt)
+                          return time > latest ? time : latest
+                        }, new Date(0))
+                        return last.toLocaleString()
+                      })()}
+                    </span>
+                  </div>
+                </div>
+                {/* Visibility and actions row */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <Badge variant="secondary">{album.exposure}</Badge>
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    <Button
+                      variant={albumBookmarked ? "default" : "secondary"}
+                      onClick={async () => {
+                        try {
+                          const tokenLocal = localStorage.getItem("token")
+                          const res = await axios.post(
+                            `${BACKEND_URL.replace(/\/$/, "")}/api/bookmarks/toggle`,
+                            { targetType: "album", targetId: album._id },
+                            {
+                              headers: tokenLocal ? { Authorization: "Bearer " + tokenLocal } : {},
+                            },
+                          )
+                          setAlbumBookmarked(res.data.bookmarked)
+                          setAlbumBookmarkCount(res.data.count || 0)
+                        } catch (err) {
+                          if (err.response?.status === 401) return alert("Please sign in to favourite")
+                          console.error(err)
+                          alert("Failed to toggle favourite")
+                        }
+                      }}
+                      className="gap-1.5"
+                    >
+                      <Heart className={`h-4 w-4 ${albumBookmarked ? "fill-current" : ""}`} />
+                      {albumBookmarked ? "Favourited" : "Favourite"}
+                    </Button>
+                    {/* Hidden bookmark count as per original */}
+                    <span className="hidden text-sm text-muted-foreground">
+                      {albumBookmarkCount} favourite
+                      {albumBookmarkCount !== 1 ? "s" : ""}
+                    </span>
+                    {isAuthor && (
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/edit/album/${album._id}`)}
+                        className="gap-1.5"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {(album.images || []).map((img) => (
+                    <Card key={img._id} className="overflow-hidden">
+                      <Link to={`/i/image/${img.slug}`}>
+                        <img
+                          src={img.imageUrl || "/placeholder.svg"}
+                          alt={img.caption || ""}
+                          className="h-40 w-full object-cover"
+                        />
+                      </Link>
+                      <CardContent className="p-3 text-center">
+                        <p className="text-sm text-foreground truncate">{img.caption || img.slug}</p>
+                        <div className="mt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                          <Heart className="h-3 w-3" />
+                          <span>
+                            {img.bookmarkCount || 0} favourite
+                            {(img.bookmarkCount || 0) !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
     </>
-  );
+  )
 }
