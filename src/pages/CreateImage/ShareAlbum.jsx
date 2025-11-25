@@ -60,6 +60,7 @@ export default function ShareAlbum() {
   }, [slug, token]);
 
   const isAuthor = album && userId && String(album.authorId) === String(userId);
+  window.console.log(album);
 
   return (
     <>
@@ -74,9 +75,28 @@ export default function ShareAlbum() {
               <h1 style={{ marginBottom: 6 }}>{album.name}</h1>
               <div style={{ color: "#666", marginBottom: 12 }}>{album.description}</div>
               <div style={{ display: 'flex', gap: 12, color: '#666', marginBottom: 12 }}>
-                <div>Views: {(album.images || []).reduce((s, it) => s + (it.views || 0), 0)}</div>
+                {/* Tính tổng view */}
+                <div>
+                  Views: {(album.images || []).reduce((sum, img) => sum + (img.view || img.views || 0), 0)}
+                </div>
+
                 <div>|</div>
-                <div>Last modified: {new Date(album.updatedAt || album.updated_at || album.createdAt).toLocaleString()}</div>
+
+                {/* Tính last modified = createdAt mới nhất trong danh sách ảnh */}
+                <div>
+                  Last modified: {
+                    (() => {
+                      const imgs = album.images || [];
+                      if (!imgs.length) return "N/A";
+                      const last = imgs.reduce((latest, img) => {
+                        const time = new Date(img.createdAt);
+                        return time > latest ? time : latest;
+                      }, new Date(0));
+                      return last.toLocaleString();
+                    })()
+                  }
+                </div>
+
               </div>
               <div style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div><strong>Visibility:</strong> {album.exposure}</div>
@@ -113,7 +133,7 @@ export default function ShareAlbum() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
                 {(album.images || []).map(img => (
                   <div key={img._id} style={{ background: "white", borderRadius: 8, padding: 8, textAlign: "center" }}>
-                    <Link to={`/share/image/${img.slug}`}>
+                    <Link to={`/i/image/${img.slug}`}>
                       <img src={img.imageUrl} alt={img.caption || ""} style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 6 }} />
                     </Link>
                     <div style={{ marginTop: 8, color: "#444" }}>{img.caption || img.slug}</div>
