@@ -182,6 +182,7 @@ export default function SharePaste() {
                             padding: "1em",
                             borderRadius: "4px",
                             lineHeight: "1.5",
+                            whiteSpace: "pre-wrap",
                         }}
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(marked.parse(paste.content || "")),

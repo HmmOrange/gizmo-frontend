@@ -485,7 +485,7 @@ const CreateImage = ({ onClose }) => {
 
         uploadedImages.push(res.data.imageUrl);
         const imgSlug = res.data?.image?.slug || finalSlugs[i];
-        const link = `${FRONTEND_URL}/share/image/${imgSlug}`;
+        const link = `${FRONTEND_URL}/i/image/${imgSlug}`;
         uploadedImages[uploadedImages.length - 1] = { url: res.data.imageUrl, link, slug: imgSlug };
       }
 
@@ -519,7 +519,7 @@ ${images.length} images uploaded!`);
   return (
     <>
       <NavBar token={token} setToken={setToken} />
-    
+
       <div style={{ display: "flex", gap: 24, padding: 20, background: "#f5f7fa", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ width: 380, background: "white", borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.1)", padding: 20 }}>
           <h2>Create Album</h2>
@@ -565,7 +565,7 @@ ${images.length} images uploaded!`);
                       <div style={{ color: "#666", fontSize: 13 }}>Visibility: {albumExposure}</div>
                       <div style={{ marginTop: 8 }}>
                         <a
-                          href={`${window.location.origin}/share/album/${encodeURIComponent(albumSlug)}`}
+                          href={`${window.location.origin}/i/album/${encodeURIComponent(albumSlug)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{ display: "inline-block", padding: "6px 12px", background: "#3498db", color: "white", borderRadius: 6, textDecoration: "none", marginRight: 8 }}
@@ -676,7 +676,7 @@ ${images.length} images uploaded!`);
                 onChange={e => { updateImageProp("slug", e.target.value); }}
                 style={{ width: "100%", padding: 12, marginTop: 6, borderRadius: 8, border: "1px solid #ddd" }}
               />
-              <small>Link: {FRONTEND_URL}/share/image/{currentImage.slug || "..."}</small>
+              <small>Link: {FRONTEND_URL}/i/image/{currentImage.slug || "..."}</small>
               {availableImageSlug === false && <div style={{ color: "#e74c3c", marginTop: 6 }}>This image URL is already taken.</div>}
               <div style={{ marginTop: 8 }}>
                 <div style={{ marginTop: 8 }}>
@@ -787,7 +787,7 @@ ${images.length} images uploaded!`);
         {onClose && <button onClick={onClose} style={{ position: "fixed", top: 20, right: 20, padding: "12px 24px", background: "#34495e", color: "white", borderRadius: 8 }}>Close</button>}
       </div>
     </>
-    );
+  );
 };
 
 export default CreateImage;

@@ -3,7 +3,7 @@ export default function FeedItemCard({ type, item }) {
     if (type === "image") {
         return (
             <a
-                href={`share/image/${item.slug}`}
+                href={`i/image/${item.slug}`}
                 className="border rounded shadow hover:shadow-lg transition bg-white"
             >
                 <img
@@ -22,7 +22,7 @@ export default function FeedItemCard({ type, item }) {
     if (type === "paste") {
         return (
             <a
-                href={`/share/${item.slug}`}
+                href={`/i/${item.slug}`}
                 className="border rounded p-3 shadow hover:shadow-lg transition bg-white"
             >
                 <h3 className="font-semibold text-lg truncate">

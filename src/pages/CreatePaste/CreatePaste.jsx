@@ -79,7 +79,7 @@ export default function CreatePaste() {
 
       const json = await res.json();
       if (res.ok) {
-        setCreateResult(`${FRONTEND_URL}/share/${json.slug}`);
+        setCreateResult(`${FRONTEND_URL}/i/${json.slug}`);
       } else {
         setCreateResult({ error: json.message || json.error });
       }
@@ -245,6 +245,7 @@ export default function CreatePaste() {
                   border: "1px solid #ddd",
                   minHeight: "150px",
                   overflowX: "auto",
+                  whiteSpace: "pre-wrap",
                 }}
                 dangerouslySetInnerHTML={{ __html: previewHTML }}
               />

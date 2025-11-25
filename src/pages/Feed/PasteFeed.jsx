@@ -11,11 +11,13 @@ export default function PasteFeed() {
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState("");
     const [searching, setSearching] = useState(false);
+    const [sort, setSort] = useState("newest");
+
 
     // Fetch list paste mặc định
-    const loadPastes = () => {
+    const loadPastes = (sortOption = sort) => {
         setLoading(true);
-        fetch(API_BASE)
+        fetch(`${API_BASE}?sort=${sortOption}`)
             .then((res) => res.json())
             .then((json) => setPastes(json))
             .finally(() => setLoading(false));
@@ -49,8 +51,32 @@ export default function PasteFeed() {
 
     return (
         <div className="flex flex-col gap-4">
+            <div className="flex gap-2 mb-2">
+                {[
+                    { value: "newest", label: "Newest" },
+                    { value: "views", label: "Views" },
+                    { value: "bookmark", label: "Bookmarks" }
+                ].map((btn) => (
+                    <button
+                        key={btn.value}
+                        onClick={() => {
+                            setSort(btn.value);
+                            loadPastes(btn.value);
+                        }}
+                        className={`
+                px-4 py-2 rounded-lg border 
+                transition-all duration-200
+                ${sort === btn.value
+                                ? "bg-blue-500 text-white border-blue-600"
+                                : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"}
+            `}
+                    >
+                        {btn.label}
+                    </button>
+                ))}
+            </div>
 
-            {/* 🔎 SEARCH BAR */}
+
             <div className="flex gap-2">
                 <input
                     type="text"
@@ -67,7 +93,6 @@ export default function PasteFeed() {
                 </button>
             </div>
 
-            {/* LIST RESULTS */}
             {pastes.length === 0 && (
                 <p className="text-gray-400">No results found.</p>
             )}
