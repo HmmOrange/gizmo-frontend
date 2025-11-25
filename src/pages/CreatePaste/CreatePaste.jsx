@@ -16,7 +16,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "../../components/ui/select";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import "./CreatePaste.css";
