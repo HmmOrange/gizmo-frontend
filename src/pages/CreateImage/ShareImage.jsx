@@ -136,7 +136,7 @@ export default function ShareImage() {
               >
                 {bookmarked ? 'Bookmarked' : 'Bookmark'}
               </button>
-              <div style={{ color: '#666' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
+              <div style={{ color: '#666', display:'none' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
               {isAuthor && (
                 <button
                   onClick={() => navigate(`/edit/image/${image._id}`)}
