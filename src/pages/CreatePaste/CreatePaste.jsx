@@ -1,11 +1,29 @@
 import { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar/NavBar";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import './CreatePaste.css'
+import "./CreatePaste.css";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL =
+  import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
 
 export default function CreatePaste() {
   const API_BASE = `${BACKEND_URL}/paste`;
@@ -28,6 +46,12 @@ export default function CreatePaste() {
   const [previewMode, setPreviewMode] = useState(false);
   const [previewHTML, setPreviewHTML] = useState("");
 
+  // change tab button
+  const [currentTab, setCurrentTab] = useState("text");
+
+  // use tab trigger
+  const [tab, setTab] = useState("text");
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
@@ -37,11 +61,34 @@ export default function CreatePaste() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // const handlePreview = () => {
+
+  //   const dirty = marked.parse(form.content || "");
+  //   const render = DOMPurify.sanitize(dirty);
+  //   setPreviewHTML(render);
+  //   setPreviewMode(true);
+
+  //   setCurrentTab("preview"); // chuyen sang preview
+  // };
+
   const handlePreview = () => {
-    const dirty = marked.parse(form.content || "");
+    // Nếu có title, thêm Heading 1 vào trước nội dung
+    const markdownWithTitle = form.title
+      ? `# ${form.title}\n\n${form.content || ""}`
+      : form.content || "";
+
+    // Parse markdown
+    const dirty = marked.parse(markdownWithTitle);
+
+    // Sanitize HTML
     const render = DOMPurify.sanitize(dirty);
+
+    // Set HTML preview
     setPreviewHTML(render);
     setPreviewMode(true);
+
+    // Chuyển sang tab preview
+    setCurrentTab("preview");
   };
 
   const closePreview = () => setPreviewMode(false);
@@ -50,9 +97,7 @@ export default function CreatePaste() {
     e.preventDefault();
 
     const convertExposure =
-      form.exposure === "password"
-        ? "password_protected"
-        : form.exposure;
+      form.exposure === "password" ? "password_protected" : form.exposure;
 
     const payload = {
       title: form.title,
@@ -113,152 +158,318 @@ export default function CreatePaste() {
     }
   };
 
+  // render tu dong
+  useEffect(() => {
+    if (tab === "preview") {
+      handlePreview(); // tự động render markdown
+    }
+  }, [tab]);
+
   return (
     <>
       <NavBar token={token} setToken={setToken} />
-      <div style={{ fontFamily: "Arial, sans-serif", maxWidth: "900px", margin: "2em auto" }}>
-        <h2 style={{ textAlign: "center", marginBottom: "1em" }}>Create a Paste</h2>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.8em" }}>
-          <label>Title</label>
-          <input
-            type="text"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Enter title"
-            style={{ padding: "8px", fontSize: "16px", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
+      <Tabs
+        defaultValue="text"
+        className="w-[700px] mx-auto"
+        value={tab}
+        onValueChange={setTab}
+      >
+        {/* 1. Phần Danh Sách Tabs */}
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="text">Text</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="usage">Usage</TabsTrigger>
+        </TabsList>
 
-          <label>Content (Markdown)</label>
-          <textarea
-            name="content"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Write your markdown content..."
-            style={{
-              minHeight: "150px",
-              padding: "10px",
-              fontSize: "16px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontFamily: "monospace",
-            }}
-          />
+        {/* 2. Phần Nội Dung Tabs */}
 
-          <div style={{ display: "flex", gap: "1em", flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={handlePreview}
-              style={{ padding: "8px 16px", borderRadius: "4px", border: "none", background: "#007bff", color: "white", cursor: "pointer" }}
-            >
-              Preview Markdown
-            </button>
+        {/* Nội dung cho Tab "Tài khoản" */}
+        <TabsContent value="text">
+          <div className="max-w-2xl mx-auto mt-6 space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Title */}
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder="Enter title"
+                />
+              </div>
 
-            <button
-              type="submit"
-              style={{ padding: "8px 16px", borderRadius: "4px", border: "none", background: "#28a745", color: "white", cursor: "pointer" }}
-            >
-              Create Paste
-            </button>
+              {/* Markdown Content */}
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  name="content"
+                  value={form.content}
+                  onChange={handleChange}
+                  placeholder="Write your markdown content..."
+                  className="min-h-[250px] font-mono"
+                />
+              </div>
+
+              {/* Exposure Select */}
+              <div className="flex items-center gap-4">
+                <Label htmlFor="exposure" className="w-40 text-right">
+                  Exposure
+                </Label>
+
+                <Select
+                  name="exposure"
+                  onValueChange={(value) =>
+                    handleChange({ target: { name: "exposure", value } })
+                  }
+                  className="flex-1"
+                >
+                  <SelectTrigger id="exposure">
+                    <SelectValue placeholder="Select exposure" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="unlisted">Unlisted</SelectItem>
+                    <SelectItem value="password">Password Protected</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Expire */}
+              <div className="flex items-center gap-4">
+                <Label htmlFor="date_of_expiry" className="w-40 text-right">
+                  Expiry Date (optional)
+                </Label>
+                <Input
+                  id="date_of_expiry"
+                  type="datetime-local"
+                  name="date_of_expiry"
+                  value={form.date_of_expiry}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+              </div>
+
+              {/* Custom URL */}
+              <div className="flex items-center gap-4">
+                <Label htmlFor="slug" className="w-40 text-right">
+                  Custom URL (optional)
+                </Label>
+                <Input
+                  id="slug"
+                  type="text"
+                  name="slug"
+                  value={form.slug}
+                  onChange={handleChange}
+                  placeholder="Enter a custom URL"
+                  className="flex-1"
+                />
+              </div>
+
+              {/* Password Field */}
+              {form.exposure === "password" && (
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                  />
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex flex-wrap gap-4 justify-end">
+                <Button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Create Paste
+                </Button>
+              </div>
+            </form>
           </div>
+        </TabsContent>
 
-          <label>Exposure</label>
-          <select
-            name="exposure"
-            value={form.exposure}
-            onChange={handleChange}
-            style={{ padding: "8px", fontSize: "16px", borderRadius: "4px", border: "1px solid #ccc" }}
-          >
-            <option value="public">Public</option>
-            <option value="unlisted">Unlisted</option>
-            <option value="password">Password Protected</option>
-            <option value="private">Private</option>
-          </select>
-
-          {form.exposure === "password" && (
-            <>
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Enter password"
-                style={{ padding: "8px", fontSize: "16px", borderRadius: "4px", border: "1px solid #ccc" }}
-              />
-            </>
-          )}
-
-          <label>Expiry Date (optional)</label>
-          <input
-            type="datetime-local"
-            name="date_of_expiry"
-            value={form.date_of_expiry}
-            onChange={handleChange}
-            style={{ padding: "8px", fontSize: "16px", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
-
-          <label>Custom URL (optional)</label>
-          <input
-            type="text"
-            name="slug"
-            value={form.slug}
-            onChange={handleChange}
-            placeholder="Enter a custom URL"
-            style={{ padding: "8px", fontSize: "16px", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
-        </form>
-
-        {previewMode && (
+        {/* Nội dung cho Tab "preview" */}
+        <TabsContent value="preview">
           <div
-            style={{
-              display: "flex",
-              gap: "1em",
-              marginTop: "1em",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: "300px" }}>
-              <h4>Markdown</h4>
-              <pre
-                style={{
-                  background: "#f7f7f7",
-                  padding: "10px",
-                  borderRadius: "4px",
-                  minHeight: "150px",
-                  fontFamily: "monospace",
-                  overflowX: "auto",
-                }}
-              >
-                {form.content}
+            className="markdown-body p-4 border rounded-md min-h-[550px]"
+            dangerouslySetInnerHTML={{ __html: previewHTML }}
+          />
+        </TabsContent>
+
+        <TabsContent value="usage">
+          <div className="space-y-6 p-4">
+            <h2 className="text-2xl font-bold text-center">
+              📖 Markdown Usage Guide
+            </h2>
+
+            {/* --- Bảng 2 cột: Input vs Output --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left: Input */}
+              <div>
+                <h3 className="font-semibold mb-2 text-lg">
+                  📝 What you type (Input)
+                </h3>
+                <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm shadow-inner">
+                  {`# Header 1
+## Header 2
+
+Return once starts a new line.
+Return twice starts new paragraph.
+
+*Italics*
+**Bold**
+~~Strikeout~~
+==Mark==
+%red% Colored Text %%
+%#ACBDEF% Colored Text Hex %%
+!>Spoiler`}
+                </pre>
+              </div>
+
+              {/* Right: Output */}
+              <div>
+                <h3 className="font-semibold mb-2 text-lg">
+                  ✨ What will be published (Output)
+                </h3>
+                <div className="p-4 border rounded-lg text-sm space-y-2 bg-white dark:bg-gray-900 shadow">
+                  {/* Giả định cách render Markdown cho các ví dụ cơ bản */}
+                  <h1 className="text-2xl font-bold border-b pb-1">Header 1</h1>
+                  <h2 className="text-xl font-semibold">Header 2</h2>
+
+                  {/* New line / Paragraphs */}
+                  <p>
+                    Return once starts a new line.
+                    <br />
+                    Return twice starts new paragraph.
+                  </p>
+
+                  <p>
+                    *<em className="italic">Italics</em>*
+                    <br />
+                    **<strong>Bold</strong>**
+                    <br />
+                    ~~<s className="line-through">Strikeout</s>~~
+                    <br />
+                    ==<span className="bg-yellow-200 px-1 rounded">Mark</span>==
+                    <br />%<span className="text-red-500">Colored Text</span>%%
+                    <br />
+                    %#<span className="text-[#ACBDEF]">Colored Text Hex</span>%%
+                    <br />
+                    !&gt;
+                    <span className="bg-gray-200 dark:bg-gray-700 p-1 rounded inline-block">
+                      Spoiler
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <hr className="my-6 border-gray-300 dark:border-gray-700" />
+
+            {/* --- Danh sách các rule khác --- */}
+            <div className="space-y-4">
+              {/* Underlines */}
+              <h3 className="font-semibold text-lg">➖ Underlines</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`!~ Simple Underlined Text ~!
+!~red; Underlined Text With Color ~!
+!~green;double; Underlined Text Plus Style ~!
+!~blue;default;line-through; Underlined Plus Type ~!
+!~orange;default;default;7; Underlined With Thickness ~!`}
+              </pre>
+
+              {/* Lists */}
+              <h3 className="font-semibold text-lg">📋 Lists</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`- Bulleted list item a
+- Bulleted list item b
+  - Nested item b1
+
+1. Numbered list item
+2. Numbered list item
+  1. Nested list item
+
+- [ ] Checkbox 1
+- [x] Checkbox 2`}
+              </pre>
+
+              {/* Comments */}
+              <h3 className="font-semibold text-lg">💬 Comments</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`[//]: (comment here)`}
+              </pre>
+
+              {/* Quotes */}
+              <h3 className="font-semibold text-lg">❝ Quotes</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`> How to use quotes in Markdown?
+> Just prepend text with >`}
+              </pre>
+
+              {/* Code Blocks */}
+              <h3 className="font-semibold text-lg">💻 Code Blocks</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`\`\`\`python
+s = "Triple backticks generate code block"
+print(s)
+\`\`\`
+Inline code uses single backtick`}
+              </pre>
+
+              {/* Horizontal Rule (Output Example) */}
+              <h3 className="font-semibold text-lg">📏 Horizontal Rule</h3>
+              <div className="p-4 border rounded-lg bg-white dark:bg-gray-900 text-sm shadow">
+                <p>This is above the rule.</p>
+                <hr className="my-4 border-gray-300 dark:border-gray-700" />
+                <p>This is below the rule (Input: `---` or `***`).</p>
+              </div>
+
+              {/* Tables */}
+              <h3 className="font-semibold text-lg">📊 Tables</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1.1 | Cell 1.2 |
+| Cell 2.1 | Cell 2.2 |`}
+              </pre>
+
+              {/* Admonitions */}
+              <h3 className="font-semibold text-lg">💡 Admonitions</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`!!! note Title
+Admonition text
+
+Main types: info, note, warning, danger`}
+              </pre>
+
+              {/* Links */}
+              <h3 className="font-semibold text-lg">🔗 Links</h3>
+              <pre className="p-4 border rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap text-sm">
+                {`[Markdown paste service](https://rentry.co/)
+<https://rentry.co/>`}
               </pre>
             </div>
-            <div style={{ flex: 1, minWidth: "300px" }}>
-              <h4>Preview</h4>
-              <div
-                className="markdown-body"
-                style={{
-                  background: "#fff",
-                  padding: "10px",
-                  borderRadius: "4px",
-                  border: "1px solid #ddd",
-                  minHeight: "150px",
-                  overflowX: "auto",
-                  whiteSpace: "pre-wrap",
-                }}
-                dangerouslySetInnerHTML={{ __html: previewHTML }}
-              />
-            </div>
-            <button
-              onClick={closePreview}
-              style={{ marginTop: "10px", padding: "6px 12px", borderRadius: "4px", border: "none", background: "#dc3545", color: "white", cursor: "pointer" }}
-            >
-              Close Preview
-            </button>
           </div>
-        )}
+        </TabsContent>
+      </Tabs>
 
+      <div
+        style={{
+          fontFamily: "Arial, sans-serif",
+          maxWidth: "900px",
+          margin: "2em auto",
+        }}
+      >
         {createResult && (
           <div
             style={{
@@ -282,29 +493,43 @@ export default function CreatePaste() {
         <h2>All Public Pastes</h2>
         <button
           onClick={loadAll}
-          style={{ padding: "8px 16px", borderRadius: "4px", border: "none", background: "#17a2b8", color: "white", cursor: "pointer", marginBottom: "1em" }}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "4px",
+            border: "none",
+            background: "#17a2b8",
+            color: "white",
+            cursor: "pointer",
+            marginBottom: "1em",
+          }}
         >
           Load All
         </button>
         <div style={{ display: "flex", flexDirection: "column", gap: "1em" }}>
           {allPastes.length
             ? allPastes.map((p) => (
-              <div
-                key={p.slug}
-                style={{
-                  background: "#f7f7f7",
-                  padding: "1em",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                }}
-              >
-                <b>{p.title || "No Title"}</b>
-                <div style={{ fontFamily: "monospace", whiteSpace: "pre-wrap", marginTop: "0.5em" }}>
-                  {p.content}
+                <div
+                  key={p.slug}
+                  style={{
+                    background: "#f7f7f7",
+                    padding: "1em",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <b>{p.title || "No Title"}</b>
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      whiteSpace: "pre-wrap",
+                      marginTop: "0.5em",
+                    }}
+                  >
+                    {p.content}
+                  </div>
+                  <small>ID: {p.slug}</small>
                 </div>
-                <small>ID: {p.slug}</small>
-              </div>
-            ))
+              ))
             : "No pastes found."}
         </div>
 
@@ -317,11 +542,23 @@ export default function CreatePaste() {
             value={fetchId}
             onChange={(e) => setFetchId(e.target.value)}
             placeholder="Paste ID"
-            style={{ padding: "8px", flex: 1, borderRadius: "4px", border: "1px solid #ccc" }}
+            style={{
+              padding: "8px",
+              flex: 1,
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
           />
           <button
             onClick={fetchPaste}
-            style={{ padding: "8px 16px", borderRadius: "4px", border: "none", background: "#ffc107", color: "white", cursor: "pointer" }}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "4px",
+              border: "none",
+              background: "#ffc107",
+              color: "white",
+              cursor: "pointer",
+            }}
           >
             Fetch
           </button>
