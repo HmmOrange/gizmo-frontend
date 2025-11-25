@@ -121,9 +121,9 @@ export default function Dashboard() {
               {displayed.length ? displayed.map((r, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid #fafafa', cursor: 'pointer' }} onClick={() => {
                   const slug = getSlugForNav(r);
-                  if (type === 'paste') navigate(`/share/${slug}`);
-                  if (type === 'image') navigate(`/share/image/${slug}`);
-                  if (type === 'album') navigate(`/share/album/${slug}`);
+                  if (type === 'paste') navigate(`/i/${slug}`);
+                  if (type === 'image') navigate(`/i/image/${slug}`);
+                  if (type === 'album') navigate(`/i/album/${slug}`);
                 }}>
                   <td style={{ padding: '8px' }}>{getDisplayName(r)}</td>
                   <td style={{ padding: '8px' }}>{getCount(r)}</td>
@@ -139,11 +139,11 @@ export default function Dashboard() {
   const BookmarkItem = ({ item, type }) => {
     const handleClick = () => {
       if (type === "paste") {
-        navigate(`/share/${item.slug}`);
+        navigate(`/i/${item.slug}`);
       } else if (type === "image") {
-        navigate(`/share/image/${item.slug}`);
+        navigate(`/i/image/${item.slug}`);
       } else if (type === "album") {
-        navigate(`/share/album/${item.slug}`);
+        navigate(`/i/album/${item.slug}`);
       }
     };
 

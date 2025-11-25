@@ -20,6 +20,8 @@ const Logo = (props) => {
   return <img src={logoImage || "/placeholder.svg"} alt="Gizmo Logo" className="h-8 w-8" {...props} />
 }
 
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
+
 // Hamburger icon component
 const HamburgerIcon = ({ className, ...props }) => (
   <svg
@@ -509,11 +511,11 @@ export const Navbar01 = React.forwardRef(
                         <UserIcon className="mr-3 h-4 w-4" />
                         <span>Account</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/mypastes`}>
                         <FileTextIcon className="mr-3 h-4 w-4" />
                         <span>Pastes</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `${FRONTEND_URL}/gallery`}>
                         <ImageIcon className="mr-3 h-4 w-4" />
                         <span>Gallery</span>
                       </DropdownMenuItem>

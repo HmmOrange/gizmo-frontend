@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import NavBar from "../../components/NavBar/NavBar";
@@ -7,17 +7,21 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 export default function ShareAlbum() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [album, setAlbum] = useState(null);
   const [albumBookmarked, setAlbumBookmarked] = useState(false);
   const [albumBookmarkCount, setAlbumBookmarkCount] = useState(0);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     // Lấy token từ localStorage khi mount
     const savedToken = localStorage.getItem("token");
+    const savedUserId = localStorage.getItem("userId");
     if (savedToken) setToken(savedToken);
+    if (savedUserId) setUserId(savedUserId);
   }, []);
 
   useEffect(() => {
@@ -55,6 +59,8 @@ export default function ShareAlbum() {
     fetchAlbum();
   }, [slug, token]);
 
+  const isAuthor = album && userId && String(album.authorId) === String(userId);
+
   return (
     <>
       <NavBar></NavBar>
@@ -72,7 +78,7 @@ export default function ShareAlbum() {
                 <div>|</div>
                 <div>Last modified: {new Date(album.updatedAt || album.updated_at || album.createdAt).toLocaleString()}</div>
               </div>
-              <div style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div><strong>Visibility:</strong> {album.exposure}</div>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button
@@ -92,7 +98,15 @@ export default function ShareAlbum() {
                   >
                     {albumBookmarked ? 'Bookmarked' : 'Bookmark'}
                   </button>
-                  <div style={{ color: '#666', display:'none' }}>{albumBookmarkCount} bookmark{albumBookmarkCount !== 1 ? 's' : ''}</div>
+                  <div style={{ color: '#666' }}>{albumBookmarkCount} bookmark{albumBookmarkCount !== 1 ? 's' : ''}</div>
+                  {isAuthor && (
+                    <button
+                      onClick={() => navigate(`/edit/album/${album._id}`)}
+                      style={{ padding: '8px 12px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginLeft: 12 }}
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
               </div>
 

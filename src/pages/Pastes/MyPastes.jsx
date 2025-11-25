@@ -82,7 +82,7 @@ export default function MyPastes() {
   };
 
   const renderPasteCard = (p) => (
-    <div key={p.pasteId || p.slug || p.id || p._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, marginBottom: 10, background: 'white', cursor: 'pointer' }} onClick={() => navigate(`/share/${p.slug || p.pasteId || p.id}`)}>
+    <div key={p.pasteId || p.slug || p.id || p._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, marginBottom: 10, background: 'white', cursor: 'pointer' }} onClick={() => navigate(`/i/${p.slug || p.pasteId || p.id}`)}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontWeight: 'bold' }}>{p.title || p.slug || 'Untitled'}</div>
         <div style={{ color: '#666', fontSize: 12 }}>{new Date(p.updatedAt || p.createdAt || p.createdAt).toLocaleString()}</div>

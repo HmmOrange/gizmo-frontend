@@ -24,7 +24,9 @@ export async function fetchUserPastes(token) {
 }
 
 export async function fetchUserAlbums(token) {
-  const res = await fetch('/api/albums/me', {
+  const url = `${BACKEND_URL}/api/albums/me`;
+  console.log('fetchUserAlbums calling:', url);
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error('Failed to fetch albums');
@@ -32,9 +34,13 @@ export async function fetchUserAlbums(token) {
 }
 
 export async function fetchUserImages(token) {
-  const res = await fetch('/api/images/me', {
+  const url = `${BACKEND_URL}/api/images/me`;
+  console.log('fetchUserImages calling:', url);
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error('Failed to fetch images');
-  return res.json();
+  const data = await res.json();
+  console.log('fetchUserImages response data:', data);
+  return data;
 }
