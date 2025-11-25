@@ -1,0 +1,123 @@
+* [33m8b410fc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat(gallery): change url from /share to /i
+*   [33m99da8c5[m Merge pull request #9 from HmmOrange/lambda
+[32m|[m[33m\[m  
+[32m|[m * [33m25d1a45[m feat: redesign /gallery and /pastes
+[32m|[m * [33m2bf8b96[m feat(gallery, pastes): rename bookmarks to favourites
+* [33m|[m [33mf4956bd[m feat(settings): change user's info
+* [33m|[m   [33m8e1c5be[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[34m|[m[35m\[m [33m\[m  
+[34m|[m * [33m|[m [33me7dd0c0[m Merge pull request #8 from HmmOrange/lambda
+[34m|[m [36m|[m[33m\[m[33m|[m 
+[34m|[m [36m|[m * [33mf330508[m feat: add profile page
+[34m|[m [36m|[m[36m/[m  
+* [36m/[m [33mda6f9b4[m feat(album): change redirect link from /share/ to /i/
+[36m|[m[36m/[m  
+[36m|[m * [33m8aeb417[m[33m ([m[1;31morigin/culi[m[33m, [m[1;32mculi[m[33m)[m redo(SharePaste): apply shadcn and tailwind
+[36m|[m * [33m048189b[m[33m ([m[1;32mlambda[m[33m)[m fix(createPaste): redo UI for CreatePaste
+[36m|[m[36m/[m  
+*   [33m0eabc2f[m Merge pull request #7 from HmmOrange/culi
+[1;33m|[m[1;34m\[m  
+[1;33m|[m * [33m9f64f44[m fix(logo): fix blur state
+[1;33m|[m * [33m67cc61d[m fix(navbar): fixing state
+* [1;34m|[m   [33m1749814[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[1;35m|[m[1;36m\[m [1;34m\[m  
+[1;35m|[m * [1;34m\[m   [33m038d697[m Merge pull request #6 from HmmOrange/fakkey
+[1;35m|[m [31m|[m[32m\[m [1;34m\[m  
+[1;35m|[m [31m|[m * [1;34m|[m [33m6dfcd97[m[33m ([m[1;31morigin/fakkey[m[33m)[m add bookmark for paste,bookmark for image bugged
+[1;35m|[m [31m|[m[31m/[m [1;34m/[m  
+* [31m/[m [1;34m/[m [33mfb0e106[m feat(profile): add Gallery page
+[31m|[m[31m/[m [1;34m/[m  
+* [1;34m|[m   [33mf6c2423[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[33m|[m[34m\[m [1;34m\[m  
+[33m|[m * [1;34m\[m   [33m69d4f12[m Merge pull request #5 from HmmOrange/fakkey
+[33m|[m [35m|[m[36m\[m [1;34m\[m  
+[33m|[m [35m|[m * [1;34m|[m [33mb47477f[m fix markdown \n
+[33m|[m [35m|[m * [1;34m|[m [33mac1a179[m sort feed
+[33m|[m [35m|[m[35m/[m [1;34m/[m  
+* [35m/[m [1;34m/[m [33m66e7869[m feat(profile):add pastes page to profile
+[35m|[m[35m/[m [1;34m/[m  
+* [1;34m|[m [33mfd916b3[m feat(dashboard): fix leaderboard sorting
+* [1;34m|[m [33m2fa8ff0[m feat(image): wrap text in 'Images Uploaded' box
+* [1;34m|[m [33m9b9bf91[m feat(image): hide bookmark count
+* [1;34m|[m   [33m6619adc[m Merge pull request #4 from HmmOrange/fakkey
+[1;31m|[m[1;32m\[m [1;34m\[m  
+[1;31m|[m * [1;34m\[m   [33m525d887[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend into fakkey
+[1;31m|[m [1;33m|[m[1;31m\[m [1;34m\[m  
+[1;31m|[m [1;33m|[m[1;31m/[m [1;34m/[m  
+[1;31m|[m[1;31m/[m[1;33m|[m [1;34m|[m   
+* [1;33m|[m [1;34m|[m   [33m8db970c[m merge
+[1;35m|[m[1;36m\[m [1;33m\[m [1;34m\[m  
+[1;35m|[m * [1;33m\[m [1;34m\[m   [33mc37652e[m Merge pull request #3 from HmmOrange/fakkey
+[1;35m|[m [31m|[m[32m\[m [1;33m\[m [1;34m\[m  
+* [31m|[m [32m|[m [1;33m|[m [1;34m|[m [33m9093b90[m feat(dashboard): add leaderboard
+* [31m|[m [32m|[m [1;33m|[m [1;34m|[m [33m02ee42b[m feat(image): minor changes in labels
+[31m|[m[31m/[m [32m/[m [1;33m/[m [1;34m/[m  
+[31m|[m [32m|[m * [1;34m/[m [33m584d69b[m qr
+[31m|[m [32m|[m[32m/[m [1;34m/[m  
+[31m|[m * [1;34m|[m   [33mf8cef77[m search bar
+[31m|[m [33m|[m[31m\[m [1;34m\[m  
+[31m|[m [33m|[m[31m/[m [1;34m/[m  
+[31m|[m[31m/[m[33m|[m [1;34m|[m   
+* [33m|[m [1;34m|[m [33ma878f13[m feat(dashboard):add new dashboard page and bookmark button to SharePaste
+* [33m|[m [1;34m|[m [33m057aa6f[m feat(bookmark): add bookmark button to ShareImage and ShareAlbum, allow only for registered users
+* [33m|[m [1;34m|[m [33m88b5e2e[m feat(image): fix all bugs related to canvas in CreateImage
+* [33m|[m [1;34m|[m   [33md5e98bf[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[35m|[m[36m\[m [33m\[m [1;34m\[m  
+* [36m|[m [33m|[m [1;34m|[m [33m3641cfe[m feat(image): copy ocr text
+* [36m|[m [33m|[m [1;34m|[m [33mff18a82[m feat(image): simple ocr
+* [36m|[m [33m|[m [1;34m|[m [33m3b5305b[m feat(image): add text input for image caption
+[36m|[m [36m|[m * [1;34m|[m   [33m4de23b9[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend into fakkey
+[36m|[m [36m|[m [1;31m|[m[36m\[m [1;34m\[m  
+[36m|[m [36m|[m [1;31m|[m[36m/[m [1;34m/[m  
+[36m|[m [36m|[m[36m/[m[1;31m|[m [1;34m|[m   
+[36m|[m * [1;31m|[m [1;34m|[m   [33mc2b74b3[m Merge pull request #2 from HmmOrange/lambda
+[36m|[m [1;33m|[m[1;34m\[m [1;31m\[m [1;34m\[m  
+[36m|[m [1;33m|[m [1;34m|[m [1;31m|[m[1;34m/[m  
+[36m|[m [1;33m|[m [1;34m|[m[1;34m/[m[1;31m|[m   
+[36m|[m [1;33m|[m * [1;31m|[m [33m99f4390[m[33m ([m[1;31morigin/lambda[m[33m)[m feat(footer): add footer component with social links
+[36m|[m [1;33m|[m[36m/[m [1;31m/[m  
+[36m|[m[36m/[m[1;33m|[m [1;31m|[m   
+[36m|[m * [1;31m|[m [33mc893330[m feat: updated buidspec
+[36m|[m * [1;31m|[m [33mc509a82[m feat: add buildspec
+[36m|[m[36m/[m [1;31m/[m  
+[36m|[m * [33m90907f8[m favor
+[36m|[m[36m/[m  
+*   [33m7de6bb1[m Merge pull request #1 from HmmOrange/lambda
+[1;35m|[m[1;36m\[m  
+[1;35m|[m *   [33mb96a422[m Merge branch 'main' into lambda
+[1;35m|[m [31m|[m[1;35m\[m  
+[1;35m|[m [31m|[m[1;35m/[m  
+[1;35m|[m[1;35m/[m[31m|[m   
+* [31m|[m [33m92406b5[m feed
+* [31m|[m [33m5cc0d3a[m feat(api.js): eliminate hard code
+* [31m|[m [33m6b1bb53[m feat(image): restrict exposures available when not logging in
+* [31m|[m [33md88675f[m feat(profile): simple info about user
+* [31m|[m [33m075ee1e[m feat(image): not show permission not allowed when author user view his images or album
+* [31m|[m [33m7264bdc[m feat(image): ask for password before showing password-protected images
+* [31m|[m   [33m469fd10[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[33m|[m[34m\[m [31m\[m  
+* [34m|[m [31m|[m [33m5a23a3d[m feat(image): link to shared images and albums
+[34m|[m [34m|[m * [33mcf425f8[m feat(navbar): update navbar positioning and styles
+[34m|[m [34m|[m * [33m21586e1[m feat(navbar): enhance navbar with user profile and notifications feat(avatar): add avatar component for user profile feat(dropdown): implement dropdown menu for user actions fix(auth): update user fetching logic and token handling
+[34m|[m [34m|[m * [33ma88dfef[m feat: login & signup final version
+[34m|[m [34m|[m[34m/[m  
+[34m|[m * [33m5e61fc2[m Fix broken URL in signin
+[34m|[m[34m/[m  
+*   [33m162b764[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[35m|[m[36m\[m  
+[35m|[m * [33me514a2f[m feat (image): deal with images/albums link
+[35m|[m * [33mae598f2[m customize buttons and inputs' labels in CreateImage.jsx
+* [36m|[m [33m72b1b20[m Fix Login & Signup, hopefully
+[36m|[m[36m/[m  
+* [33m4c6d2ef[m Use axios in login and completely prevent using vite.config routing
+* [33m1ff81ea[m Remove Github Actions CI from frontend
+* [33m43d6b46[m Separate dev & prod env
+* [33m757d379[m feat(image): check if image's slug has been used
+*   [33mc37bd7a[m Merge branch 'main' of https://github.com/HmmOrange/gizmo-frontend
+[1;31m|[m[1;32m\[m  
+[1;31m|[m * [33mc90efdd[m Add deploy.yml
+* [1;32m|[m [33m1299417[m feat(image): store albums and image metadata to mongodb
+[1;32m|[m[1;32m/[m  
+* [33m96950a3[m build: add env
+* [33m3b682b1[m wat am i doing
+* [33mb2ff2dc[m Initialize sub-repo
