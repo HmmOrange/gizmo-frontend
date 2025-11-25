@@ -118,7 +118,7 @@ export default function ShareAlbum() {
                   >
                     {albumBookmarked ? 'Bookmarked' : 'Bookmark'}
                   </button>
-                  <div style={{ color: '#666' }}>{albumBookmarkCount} bookmark{albumBookmarkCount !== 1 ? 's' : ''}</div>
+                  <div style={{ color: '#666', display: 'none' }}>{albumBookmarkCount} bookmark{albumBookmarkCount !== 1 ? 's' : ''}</div>
                   {isAuthor && (
                     <button
                       onClick={() => navigate(`/edit/album/${album._id}`)}
