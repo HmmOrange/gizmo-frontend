@@ -15,6 +15,7 @@ import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx"
 import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx"
 import Profile from "../pages/Profile/Profile.jsx"
 import FeedPage from "../pages/Feed/FeedPage.jsx"
+import Dashboard from "../pages/Dashboard/Dashboard.jsx"
 
 function AppContent() {
   const location = useLocation()
@@ -37,6 +38,7 @@ function AppContent() {
         <Route path="/auth/success" element={<AuthCallback />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/feed" element={<FeedPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       {!hideFooter && <Footer />}
     </>

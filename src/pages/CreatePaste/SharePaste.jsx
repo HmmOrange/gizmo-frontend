@@ -11,7 +11,7 @@ export default function SharePaste() {
     const [password, setPassword] = useState("");
     const [needsPassword, setNeedsPassword] = useState(false);
     const [error, setError] = useState("");
-
+    const [isBookmarked, setIsBookmarked] = useState(false);
     const token = localStorage.getItem("token");
     const fetchPaste = async (pw = "") => {
         setLoading(true);
@@ -21,22 +21,29 @@ export default function SharePaste() {
         const headers = {};
         if (token) headers["Authorization"] = "Bearer " + token;
 
-        const res = await fetch(url, { headers });
-        const json = await res.json();
+        try {
+            const res = await fetch(url, { headers });
+            const json = await res.json();
 
-        if (json.error === "Password required or incorrect") {
-            setNeedsPassword(true);
-            setPaste(null);
-        } else if (json.error) {
-            setError(json.error);
-            setPaste(null);
-            setNeedsPassword(false);
-        } else {
-            setPaste(json);
-            setNeedsPassword(false);
-            setError("");
+            if (json.error === "Password required or incorrect") {
+                setNeedsPassword(true);
+                setPaste(null);
+            } else if (json.error) {
+                setError(json.error);
+                setPaste(null);
+                setNeedsPassword(false);
+            } else {
+                setPaste(json);
+                setNeedsPassword(false);
+                setError("");
+                if (token) checkBookmark(id);
+            }
+        } catch (err) {
+            console.error('fetchPaste error', err);
+            setError('Failed to load paste');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -79,6 +86,51 @@ export default function SharePaste() {
             alert("SUMMARY:\n\n" + json.summary);
         } else {
             alert("Failed to summarize");
+        }
+    };
+
+    const checkBookmark = async (pasteId) => {
+        try {
+            const res = await fetch(
+                `${BACKEND_URL}/api/bookmarks/check?targetType=paste&targetId=${encodeURIComponent(pasteId)}`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            );
+            const data = await res.json();
+            setIsBookmarked(data.bookmarked);
+        } catch (err) {
+            console.error("Error checking bookmark:", err);
+        }
+    };
+
+    const handleBookmark = async () => {
+        if (!token) {
+            alert("Please login to bookmark");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/bookmarks/toggle`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    targetType: "paste",
+                    targetId: id
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to toggle bookmark");
+            const data = await res.json();
+            setIsBookmarked(data.bookmarked);
+        } catch (err) {
+            console.error("Error toggling bookmark:", err);
+            alert("Failed to bookmark");
         }
     };
 
@@ -153,6 +205,17 @@ export default function SharePaste() {
                         >
                             Export PDF
                         </button>
+                        <button
+                            onClick={handleBookmark}
+                            style={{
+                                marginLeft: 10,
+                                marginRight: 10,
+                                background: isBookmarked ? "#ff6b6b" : "#4caf50",
+                                color: "#fff"
+                            }}
+                        >
+                            {isBookmarked ? "❤ Bookmarked" : "🤍 Bookmark"}
+                        </button>
                     </div>
 
                     <button
@@ -187,3 +250,4 @@ export default function SharePaste() {
         </div>
     );
 }
+
