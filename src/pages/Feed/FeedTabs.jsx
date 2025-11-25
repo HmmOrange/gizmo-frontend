@@ -1,22 +1,21 @@
-// components/FeedTabs.jsx
-export default function FeedTabs({ tab, setTab }) {
-    return (
-        <div className="flex gap-4 mb-6 border-b pb-2">
-            <button
-                onClick={() => setTab("images")}
-                className={`px-4 py-2 rounded ${tab === "images" ? "bg-blue-600 text-white" : "bg-gray-200"
-                    }`}
-            >
-                Images
-            </button>
+"use client"
 
-            <button
-                onClick={() => setTab("pastes")}
-                className={`px-4 py-2 rounded ${tab === "pastes" ? "bg-blue-600 text-white" : "bg-gray-200"
-                    }`}
-            >
-                Pastes
-            </button>
-        </div>
-    );
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ImageIcon, FileText } from "lucide-react"
+
+export default function FeedTabs({ tab, setTab }) {
+  return (
+    <Tabs value={tab} onValueChange={setTab} className="mb-6">
+      <TabsList className="grid w-full max-w-xs grid-cols-2">
+        <TabsTrigger value="images" className="flex items-center gap-2">
+          <ImageIcon className="h-4 w-4" />
+          Images
+        </TabsTrigger>
+        <TabsTrigger value="pastes" className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Pastes
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  )
 }
