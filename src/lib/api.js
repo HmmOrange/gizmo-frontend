@@ -10,6 +10,35 @@ export async function fetchUserProfile(token) {
   return await res.json();
 }
 
+export async function updateUserProfile(token, updates) {
+  const res = await fetch(`${BACKEND_URL}/api/user/profile`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(updates)
+  });
+  if (!res.ok) throw new Error('Failed to update profile');
+  return await res.json();
+}
+
+export async function changeUserPassword(token, currentPassword, newPassword) {
+  const res = await fetch(`${BACKEND_URL}/api/user/password`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ currentPassword, newPassword })
+  });
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new Error(payload.message || 'Failed to change password');
+  }
+  return await res.json();
+}
+
 export async function fetchUserPastes(token) {
   const url = `${BACKEND_URL}/paste/me`;
   console.log('fetchUserPastes calling:', url);
