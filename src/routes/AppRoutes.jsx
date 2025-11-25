@@ -14,6 +14,7 @@ import ShareImage from "../pages/CreateImage/ShareImage.jsx"
 import ShareAlbum from "../pages/CreateImage/ShareAlbum.jsx"
 import AuthCallback from "../pages/AuthCallBack/AuthCallback.jsx"
 import Profile from "../pages/Profile/Profile.jsx"
+import MyPastes from "../pages/Pastes/MyPastes.jsx"
 import FeedPage from "../pages/Feed/FeedPage.jsx"
 import Dashboard from "../pages/Dashboard/Dashboard.jsx"
 
@@ -37,6 +38,7 @@ function AppContent() {
         <Route path="/share/album/:slug" element={<ShareAlbum />} />
         <Route path="/auth/success" element={<AuthCallback />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/mypastes" element={<MyPastes />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>

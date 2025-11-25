@@ -8,7 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: process.env.VITE_BACKEND_URL,
+        // Provide a safe default so vite doesn't throw when env var is missing
+        target: process.env.VITE_BACKEND_URL || "http://localhost:3000",
         changeOrigin: true
       }
     }

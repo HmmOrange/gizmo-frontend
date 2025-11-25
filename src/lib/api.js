@@ -11,11 +11,16 @@ export async function fetchUserProfile(token) {
 }
 
 export async function fetchUserPastes(token) {
-  const res = await fetch('/api/pastes/me', {
+  const url = `${BACKEND_URL}/paste/me`;
+  console.log('fetchUserPastes calling:', url);
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
+  console.log('fetchUserPastes response status:', res.status);
   if (!res.ok) throw new Error('Failed to fetch pastes');
-  return res.json();
+  const data = await res.json();
+  console.log('fetchUserPastes response data:', data);
+  return data;
 }
 
 export async function fetchUserAlbums(token) {
