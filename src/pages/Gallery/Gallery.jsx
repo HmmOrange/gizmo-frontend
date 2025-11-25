@@ -92,7 +92,7 @@ export default function Gallery() {
       <Card
         key={i._id || i.slug}
         className="group cursor-pointer transition-all hover:shadow-xl overflow-hidden border-0 p-0"
-        onClick={() => navigate(`/share/image/${i.slug || i._id}`)}
+        onClick={() => navigate(`/i/image/${i.slug || i._id}`)}
       >
         <CardContent className="p-0 relative">
           <div className="aspect-video w-full overflow-hidden bg-muted">
@@ -130,7 +130,7 @@ export default function Gallery() {
       <Card
         key={a._id || a.slug}
         className="group cursor-pointer transition-all hover:shadow-xl overflow-hidden border-0 p-0"
-        onClick={() => navigate(`/share/album/${a.slug || a._id}`)}
+        onClick={() => navigate(`/i/album/${a.slug || a._id}`)}
       >
         <CardContent className="p-0 relative">
           <div className="aspect-video w-full overflow-hidden bg-muted flex items-center justify-center">
