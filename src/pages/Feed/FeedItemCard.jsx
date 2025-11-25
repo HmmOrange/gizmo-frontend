@@ -3,16 +3,16 @@ export default function FeedItemCard({ type, item }) {
     if (type === "image") {
         return (
             <a
-                href={`/i/${item.slug}`}
+                href={`share/image/${item.slug}`}
                 className="border rounded shadow hover:shadow-lg transition bg-white"
             >
                 <img
                     src={item.imageUrl}
-                    alt={item.caption}
+                    // alt={item.caption}
                     className="w-full h-52 object-cover rounded-t"
                 />
                 <div className="p-3">
-                    <p className="font-medium truncate">{item.caption || "No caption"}</p>
+                    <p className="font-medium truncate">{item.slug || "No caption"}</p>
                     <p className="text-sm text-gray-500">{item.views} views</p>
                 </div>
             </a>
@@ -22,7 +22,7 @@ export default function FeedItemCard({ type, item }) {
     if (type === "paste") {
         return (
             <a
-                href={`/paste/${item.slug}`}
+                href={`/share/${item.slug}`}
                 className="border rounded p-3 shadow hover:shadow-lg transition bg-white"
             >
                 <h3 className="font-semibold text-lg truncate">
