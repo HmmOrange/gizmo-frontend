@@ -87,7 +87,6 @@ export default function ShareImage() {
         padding: "40px 20px",
         fontFamily: "system-ui, sans-serif"
       }}>
-        <h1 style={{ marginBottom: 20 }}>Shared Image</h1>
 
         {loading && <p>Loading...</p>}
 
@@ -134,9 +133,9 @@ export default function ShareImage() {
                 }}
                 style={{ padding: '8px 12px', background: bookmarked ? '#ffb6c1' : '#f0f0f0', border: 'none', borderRadius: 8, cursor: 'pointer' }}
               >
-                {bookmarked ? 'Bookmarked' : 'Bookmark'}
+                {bookmarked ? 'Favouriteed' : 'Favourite'}
               </button>
-              <div style={{ color: '#666', display:'none' }}>{bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''}</div>
+              <div style={{ color: '#666', display:'none' }}>{bookmarkCount} favourite{bookmarkCount !== 1 ? 's' : ''}</div>
               {isAuthor && (
                 <button
                   onClick={() => navigate(`/edit/image/${image._id}`)}

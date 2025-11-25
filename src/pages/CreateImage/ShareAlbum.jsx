@@ -109,16 +109,16 @@ export default function ShareAlbum() {
                         setAlbumBookmarked(res.data.bookmarked);
                         setAlbumBookmarkCount(res.data.count || 0);
                       } catch (err) {
-                        if (err.response?.status === 401) return alert('Please sign in to bookmark');
+                        if (err.response?.status === 401) return alert('Please sign in to favourite');
                         console.error(err);
-                        alert('Failed to toggle bookmark');
+                        alert('Failed to toggle favourite');
                       }
                     }}
                     style={{ padding: '8px 12px', background: albumBookmarked ? '#ffb6c1' : '#f0f0f0', border: 'none', borderRadius: 8, cursor: 'pointer' }}
                   >
-                    {albumBookmarked ? 'Bookmarked' : 'Bookmark'}
+                    {albumBookmarked ? 'Favourited' : 'Favourite'}
                   </button>
-                  <div style={{ color: '#666', display: 'none' }}>{albumBookmarkCount} bookmark{albumBookmarkCount !== 1 ? 's' : ''}</div>
+                  <div style={{ color: '#666', display: 'none' }}>{albumBookmarkCount} favourite{albumBookmarkCount !== 1 ? 's' : ''}</div>
                   {isAuthor && (
                     <button
                       onClick={() => navigate(`/edit/album/${album._id}`)}
@@ -137,7 +137,7 @@ export default function ShareAlbum() {
                       <img src={img.imageUrl} alt={img.caption || ""} style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 6 }} />
                     </Link>
                     <div style={{ marginTop: 8, color: "#444" }}>{img.caption || img.slug}</div>
-                    <div style={{ marginTop: 6, color: '#666' }}>{img.bookmarkCount || 0} bookmark{(img.bookmarkCount || 0) !== 1 ? 's' : ''}</div>
+                    <div style={{ marginTop: 6, color: '#666' }}>{img.bookmarkCount || 0} favourite{(img.bookmarkCount || 0) !== 1 ? 's' : ''}</div>
                   </div>
                 ))}
               </div>
