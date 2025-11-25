@@ -91,14 +91,13 @@ export default function MyPastes() {
       <div style={{ marginTop: 8, display: 'flex', gap: 12, color: '#666' }}>
         <div>Views: {p.views || 0}</div>
         <div>|</div>
-        <div>Bookmarks: {p.bookmarks ?? p.bookmarkCount ?? 0}</div>
+        <div>Favourites: {p.bookmarks ?? p.bookmarkCount ?? 0}</div>
       </div>
     </div>
   );
 
   return (
     <div style={{ padding: 20, maxWidth: 900, margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>My Pastes</h1>
 
       {!token && <div style={{ color: 'red' }}>Please sign in to view this page.</div>}
 
@@ -114,21 +113,21 @@ export default function MyPastes() {
               <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalViews}</div>
             </div>
             <div style={{ padding: 12, borderRadius: 8, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 200 }}>
-              <div style={{ color: '#666', fontSize: 12 }}>Your Bookmarks</div>
+              <div style={{ color: '#666', fontSize: 12 }}>Your Favourites</div>
               <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalBookmarksCount}</div>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
             <button onClick={() => setActiveTab('mine')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'mine' ? '#007bff' : '#f0f0f0', color: activeTab === 'mine' ? 'white' : '#333', border: 'none' }}>My pastes</button>
-            <button onClick={() => setActiveTab('bookmarks')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'bookmarks' ? '#007bff' : '#f0f0f0', color: activeTab === 'bookmarks' ? 'white' : '#333', border: 'none' }}>Bookmarks</button>
+            <button onClick={() => setActiveTab('bookmarks')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'bookmarks' ? '#007bff' : '#f0f0f0', color: activeTab === 'bookmarks' ? 'white' : '#333', border: 'none' }}>Favourites</button>
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
             <input placeholder="Search by title" value={query} onChange={e => setQuery(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #ddd' }} />
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid #ddd' }}>
               <option value="views">Sort by views</option>
-              <option value="bookmarks">Sort by bookmarks</option>
+              <option value="bookmarks">Sort by Favourites</option>
             </select>
           </div>
 
@@ -144,7 +143,7 @@ export default function MyPastes() {
 
             {!loading && !error && activeTab === 'bookmarks' && (
               <div>
-                {filterAndSort(bookmarkedPastes).length === 0 ? <div>No bookmarks found.</div> : filterAndSort(bookmarkedPastes).map(renderPasteCard)}
+                {filterAndSort(bookmarkedPastes).length === 0 ? <div>No Favourites found.</div> : filterAndSort(bookmarkedPastes).map(renderPasteCard)}
               </div>
             )}
           </div>

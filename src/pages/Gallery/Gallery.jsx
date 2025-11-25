@@ -85,7 +85,7 @@ export default function Gallery() {
       <div style={{ marginTop: 8, display: 'flex', gap: 12, color: '#666' }}>
         <div>Views: {i.views || 0}</div>
         <div>|</div>
-        <div>Bookmarks: {i.bookmarks ?? i.bookmarkCount ?? 0}</div>
+        <div>Favourites: {i.bookmarks ?? i.bookmarkCount ?? 0}</div>
       </div>
     </div>
   );
@@ -97,14 +97,13 @@ export default function Gallery() {
       <div style={{ marginTop: 8, display: 'flex', gap: 12, color: '#666' }}>
         <div>Views: {a.views || 0}</div>
         <div>|</div>
-        <div>Bookmarks: {a.bookmarks ?? a.bookmarkCount ?? 0}</div>
+        <div>Favourites: {a.bookmarks ?? a.bookmarkCount ?? 0}</div>
       </div>
     </div>
   );
 
   return (
     <div style={{ padding: 20, maxWidth: 1000, margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Gallery</h1>
 
       {!token && <div style={{ color: 'red' }}>Please sign in to view this page.</div>}
 
@@ -124,7 +123,7 @@ export default function Gallery() {
               <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalImageViews}</div>
             </div>
             <div style={{ padding: 12, borderRadius: 8, background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 200 }}>
-              <div style={{ color: '#666', fontSize: 12 }}>Your Image Bookmarks</div>
+              <div style={{ color: '#666', fontSize: 12 }}>Your Image Favourites</div>
               <div style={{ fontSize: 20, fontWeight: 'bold' }}>{totalImageBookmarks}</div>
             </div>
           </div>
@@ -132,7 +131,7 @@ export default function Gallery() {
           <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
             <button onClick={() => setActiveTab('images')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'images' ? '#007bff' : '#f0f0f0', color: activeTab === 'images' ? 'white' : '#333', border: 'none' }}>My images</button>
             <button onClick={() => setActiveTab('albums')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'albums' ? '#007bff' : '#f0f0f0', color: activeTab === 'albums' ? 'white' : '#333', border: 'none' }}>My albums</button>
-            <button onClick={() => setActiveTab('bookmarks')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'bookmarks' ? '#007bff' : '#f0f0f0', color: activeTab === 'bookmarks' ? 'white' : '#333', border: 'none' }}>Bookmarks</button>
+            <button onClick={() => setActiveTab('bookmarks')} style={{ padding: 8, borderRadius: 8, background: activeTab === 'bookmarks' ? '#007bff' : '#f0f0f0', color: activeTab === 'bookmarks' ? 'white' : '#333', border: 'none' }}>Favourites</button>
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
@@ -161,7 +160,7 @@ export default function Gallery() {
 
             {!loading && !error && activeTab === 'bookmarks' && (
               <div>
-                {filterAndSort(bookmarkedImages).length === 0 ? <div>No bookmarks found.</div> : filterAndSort(bookmarkedImages).map(renderImageCard)}
+                {filterAndSort(bookmarkedImages).length === 0 ? <div>No favourites found.</div> : filterAndSort(bookmarkedImages).map(renderImageCard)}
               </div>
             )}
           </div>
