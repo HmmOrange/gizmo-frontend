@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from "react";
+// src/pages/SharePaste.jsx
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { marked } from "marked";
-import DOMPurify from "dompurify"; // sanitize HTML
+import DOMPurify from "dompurify";
+import { QRCodeCanvas } from "qrcode.react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 export default function SharePaste() {
-    const API_BASE = `${BACKEND_URL}/paste`;
     const { id } = useParams();
-
     const [paste, setPaste] = useState(null);
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState("");
     const [needsPassword, setNeedsPassword] = useState(false);
     const [error, setError] = useState("");
     const [isBookmarked, setIsBookmarked] = useState(false);
+
+    const qrRef = useRef(null);
     const token = localStorage.getItem("token");
 
-    // Fetch paste data
     const fetchPaste = async (pw = "") => {
         setLoading(true);
-        let url = `${API_BASE}/${encodeURIComponent(id)}`;
+        let url = `${BACKEND_URL}/paste/${encodeURIComponent(id)}`;
         if (pw) url += `?password=${encodeURIComponent(pw)}`;
 
-        const headers = {};
-        if (token) headers["Authorization"] = "Bearer " + token;
+        const headers = token ? { Authorization: "Bearer " + token } : {};
 
         try {
             const res = await fetch(url, { headers });
@@ -44,8 +44,8 @@ export default function SharePaste() {
                 if (token) checkBookmark(id);
             }
         } catch (err) {
-            console.error('fetchPaste error', err);
-            setError('Failed to load paste');
+            console.error("fetchPaste error", err);
+            setError("Failed to load paste");
         } finally {
             setLoading(false);
         }
@@ -53,23 +53,21 @@ export default function SharePaste() {
 
     useEffect(() => {
         fetchPaste();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    // Handle password submit
     const onSubmitPassword = (e) => {
         e.preventDefault();
         fetchPaste(password);
     };
 
-    // Export paste
     const handleExport = async (format) => {
-        const url = `${API_BASE}/${encodeURIComponent(id)}/export?format=${format}`;
-
+        const url = `${BACKEND_URL}/paste/${encodeURIComponent(id)}/export?format=${format}`;
         try {
-            const response = await fetch(url);
-            if (!response.ok) return alert("Export failed.");
+            const res = await fetch(url);
+            if (!res.ok) return alert("Export failed");
 
-            const blob = await response.blob();
+            const blob = await res.blob();
             const link = document.createElement("a");
             const ext = format === "raw" ? "md" : format;
             link.download = `${id}.${ext}`;
@@ -78,12 +76,12 @@ export default function SharePaste() {
             window.URL.revokeObjectURL(link.href);
         } catch (err) {
             console.error(err);
-            alert("Export failed.");
+            alert("Export failed");
         }
     };
 
     const handleSummary = async () => {
-        const url = `${API_BASE}/${encodeURIComponent(id)}/summary`;
+        const url = `${BACKEND_URL}/paste/${encodeURIComponent(id)}/summary`;
         try {
             const res = await fetch(url);
             const json = await res.json();
@@ -98,11 +96,7 @@ export default function SharePaste() {
         try {
             const res = await fetch(
                 `${BACKEND_URL}/api/bookmarks/check?targetType=paste&targetId=${encodeURIComponent(pasteId)}`,
-                {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             const data = await res.json();
             setIsBookmarked(data.bookmarked);
@@ -112,59 +106,60 @@ export default function SharePaste() {
     };
 
     const handleBookmark = async () => {
-        if (!token) {
-            alert("Please login to bookmark");
-            return;
-        }
+        if (!token) return alert("Please login to bookmark");
 
         try {
             const res = await fetch(`${BACKEND_URL}/api/bookmarks/toggle`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    targetType: "paste",
-                    targetId: id
-                })
+                body: JSON.stringify({ targetType: "paste", targetId: id }),
             });
-
             if (!res.ok) throw new Error("Failed to toggle bookmark");
             const data = await res.json();
             setIsBookmarked(data.bookmarked);
         } catch (err) {
-            console.error("Error toggling bookmark:", err);
+            console.error(err);
             alert("Failed to bookmark");
         }
     };
 
+    const downloadQR = () => {
+        if (!qrRef.current) return;
+        const canvas = qrRef.current.querySelector("canvas");
+        if (!canvas) return;
+        const pngUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = pngUrl;
+        link.download = `paste_${id}_qr.png`;
+        link.click();
+    };
+
+    const copyQR = async () => {
+        if (!qrRef.current) return;
+        const canvas = qrRef.current.querySelector("canvas");
+        if (!canvas) return;
+        canvas.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                alert("QR code copied to clipboard!");
+            } catch (err) {
+                console.error(err);
+                alert("Failed to copy QR code");
+            }
+        });
+    };
+
     return (
-        <div
-            style={{
-                maxWidth: 700,
-                margin: "2em auto",
-                fontFamily: "Menlo, Monaco, monospace",
-                background: "#222",
-                color: "#fff",
-                padding: "2em",
-                borderRadius: "8px",
-            }}
-        >
+        <div style={{ maxWidth: 700, margin: "2em auto", fontFamily: "Menlo, Monaco, monospace", background: "#222", color: "#fff", padding: "2em", borderRadius: 8 }}>
             {loading && <div>Loading...</div>}
 
             {!loading && needsPassword && (
                 <form onSubmit={onSubmitPassword}>
-                    <div style={{ marginBottom: "1em", color: "#d66" }}>
-                        This paste is PRIVATE and requires a password.
-                    </div>
-                    <input
-                        type="password"
-                        placeholder="Enter password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        style={{ padding: "0.5em", marginBottom: "1em", width: "100%" }}
-                    />
+                    <div style={{ marginBottom: "1em", color: "#d66" }}>This paste is PRIVATE and requires a password.</div>
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ padding: "0.5em", marginBottom: "1em", width: "100%" }} />
                     <button type="submit">View Paste</button>
                     {error && <div style={{ color: "#d66" }}>{error}</div>}
                 </form>
@@ -192,71 +187,35 @@ export default function SharePaste() {
                             __html: DOMPurify.sanitize(marked.parse(paste.content || "")),
                         }}
                     />
+                    {paste.date_of_expiry && <div style={{ fontSize: "0.8em", color: "#d66" }}>Expires: {new Date(paste.date_of_expiry).toLocaleString()}</div>}
 
-                    {paste.date_of_expiry && (
-                        <div style={{ fontSize: "0.8em", color: "#d66" }}>
-                            Expires: {new Date(paste.date_of_expiry).toLocaleString()}
-                        </div>
-                    )}
-
-                    {/* Other actions */}
-                    <div style={{ marginTop: "1em" }}>
-                        <button onClick={() => handleExport("raw")} style={{ marginRight: 10 }}>
-                            Export RAW
-                        </button>
-                        <button onClick={() => handleExport("png")} style={{ marginRight: 10 }}>
-                            Export PNG
-                        </button>
-
-                        <button
-                            onClick={() => handleExport("pdf")}
-                        >
-                            Export PDF
-                        </button>
-                        <button
-                            onClick={handleBookmark}
-                            style={{
-                                marginLeft: 10,
-                                marginRight: 10,
-                                background: isBookmarked ? "#ff6b6b" : "#4caf50",
-                                color: "#fff"
-                            }}
-                        >
+                    <div style={{ marginTop: 16 }}>
+                        <button onClick={() => handleExport("raw")} style={{ marginRight: 8 }}>Export RAW</button>
+                        <button onClick={() => handleExport("png")} style={{ marginRight: 8 }}>Export PNG</button>
+                        <button onClick={() => handleExport("pdf")}>Export PDF</button>
+                        <button onClick={handleBookmark} style={{ marginLeft: 10, marginRight: 10, background: isBookmarked ? "#ff6b6b" : "#4caf50", color: "#fff" }}>
                             {isBookmarked ? "❤ Bookmarked" : "🤍 Bookmark"}
                         </button>
+                        <button onClick={handleSummary} style={{ background: "#4caf50", color: "#fff" }}>Summarize</button>
                     </div>
 
-                    <button
-                        onClick={handleSummary}
-                        style={{ marginLeft: 10, background: "#4caf50", color: "#fff" }}
-                    >
-                        Summarize
-                    </button>
+                    {paste.authorId && token && JSON.parse(atob(token.split(".")[1]))?.user_id === paste.authorId && (
+                        <button onClick={() => (window.location.href = `/edit/${id}`)} style={{ marginTop: 10, background: "#ffb300", color: "#000", fontWeight: "bold", padding: "0.5em 1em", borderRadius: 4 }}>Edit Paste</button>
+                    )}
 
-                    {paste.authorId &&
-                        token &&
-                        JSON.parse(atob(token.split(".")[1]))?.user_id === paste.authorId && (
-                            <button
-                                onClick={() => (window.location.href = `/edit/${id}`)}
-                                style={{
-                                    marginLeft: 10,
-                                    background: "#ffb300",
-                                    color: "#000",
-                                    fontWeight: "bold",
-                                    padding: "0.5em 1em",
-                                    borderRadius: 4,
-                                }}
-                            >
-                                Edit Paste
-                            </button>
-                        )}
+                    {/* QR Code */}
+                    <div style={{ marginTop: 20, textAlign: "center" }} ref={qrRef}>
+                        <p>Scan QR code to open this paste:</p>
+                        <QRCodeCanvas value={window.location.href} size={150} />
+                        <div style={{ marginTop: 8 }}>
+                            <button onClick={downloadQR} style={{ marginRight: 8 }}>Download QR</button>
+                            <button onClick={copyQR}>Copy QR</button>
+                        </div>
+                    </div>
                 </>
             )}
 
-            {error && !needsPassword && (
-                <div style={{ color: "#d66", fontWeight: "bold" }}>ERROR: {error}</div>
-            )}
+            {error && !needsPassword && <div style={{ color: "#d66", fontWeight: "bold" }}>ERROR: {error}</div>}
         </div>
     );
 }
-
